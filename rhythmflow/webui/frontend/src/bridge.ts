@@ -165,7 +165,7 @@ function createMockApi(emit: (m: { event: string; payload: unknown }) => void): 
     async about_info() {
       return {
         app_name: 'RhythmFlow',
-        version: '0.2.0',
+        version: '0.2.1',
         author: 'HaoduStudio',
         repository: 'https://github.com/HaoduStudio/RhythmFlow',
       };

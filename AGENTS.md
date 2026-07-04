@@ -5,7 +5,7 @@
 RhythmFlow is a cross-platform (Windows/macOS) desktop application for aligning hand-cam ("hand-cam") arcade rhythm game videos to clean reference audio. It estimates global offsets via chroma-feature cross-correlation, supports smart segmented alignment to detect extra sections, and exports aligned MP4s with a configurable audio blend.
 
 - **Entry point**: `rhythmflow/app.py` → `python -m rhythmflow`
-- **Package name**: `rhythmflow` (version 0.2.0)
+- **Package name**: `rhythmflow` (version 0.2.1)
 - **License**: Apache 2.0
 
 ## Tech Stack
@@ -77,7 +77,7 @@ py -3 -m unittest discover -s tests
 ```
 RhythmFlow/
 ├── rhythmflow/                   # Main Python package
-│   ├── __init__.py               # Package version (0.2.0)
+│   ├── __init__.py               # Package version (0.2.1)
 │   ├── __main__.py               # Entry for `python -m rhythmflow`
 │   ├── app.py                    # Main launcher → delegates to webui
 │   ├── config.py                 # Constants (SAMPLE_RATE=44100, FFT params, defaults)
