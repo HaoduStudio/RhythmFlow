@@ -14,8 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class FfmpegError(RuntimeError):
-    """Raised when ffmpeg probing or processing fails."""
-
+    pass
 
 @dataclass(frozen=True)
 class MediaProbe:

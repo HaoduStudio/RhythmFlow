@@ -12,8 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class AudioDecodeError(RuntimeError):
-    """Raised when a media file cannot be decoded to mono PCM."""
-
+    pass
 
 def decode_mono(path: str, sr: int = 22050) -> np.ndarray:
     logger.info("Decoding mono audio: path=%s sr=%d", path, sr)

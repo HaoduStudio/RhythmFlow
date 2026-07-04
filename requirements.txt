@@ -1,5 +1,4 @@
-PyQt6>=6.7
-qt-material>=2.14
+pywebview>=5.0
 sentry-sdk>=2.35.0
 numpy>=2.0
 scipy>=1.14

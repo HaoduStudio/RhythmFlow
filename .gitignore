@@ -219,3 +219,9 @@ __marimo__/
 .streamlit/secrets.toml
 
 output/
+
+# Node / front-end (pywebview React UI)
+node_modules/
+rhythmflow/webui/frontend_dist/
+npm-debug.log*
+.vite/

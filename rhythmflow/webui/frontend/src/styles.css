@@ -1,0 +1,240 @@
+:root {
+  color-scheme: dark;
+  --app-bg: #0f172a;
+  --app-header-bg: #0f172a;
+  --app-header-border: #1e293b;
+  --app-title-start: #5eead4;
+  --app-title-end: #14b8a6;
+  --app-text-muted: #94a3b8;
+  --app-text-soft: #cbd5e1;
+  --app-log-bg: #0b1424;
+  --app-log-border: #1e293b;
+  --app-row-error: rgba(127, 29, 29, 0.35);
+  --app-row-review: rgba(120, 53, 15, 0.4);
+  --app-row-ok: rgba(20, 83, 45, 0.28);
+  --app-waveform-bg: #0f172a;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --app-bg: #f8fafc;
+  --app-header-bg: #ffffff;
+  --app-header-border: #dbe3ef;
+  --app-title-start: #0f766e;
+  --app-title-end: #14b8a6;
+  --app-text-muted: #64748b;
+  --app-text-soft: #334155;
+  --app-log-bg: #ffffff;
+  --app-log-border: #dbe3ef;
+  --app-row-error: rgba(254, 226, 226, 0.9);
+  --app-row-review: rgba(254, 243, 199, 0.95);
+  --app-row-ok: rgba(220, 252, 231, 0.9);
+  --app-waveform-bg: #f8fafc;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--app-bg);
+  font-family: 'Microsoft YaHei UI', 'Microsoft YaHei', 'Segoe UI', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app-layout {
+  min-height: 100%;
+  background: var(--app-bg);
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 24px;
+  height: 64px;
+  background: var(--app-header-bg);
+  border-bottom: 1px solid var(--app-header-border);
+}
+
+.app-brand {
+  min-width: 0;
+}
+
+.app-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  background: linear-gradient(90deg, var(--app-title-start), var(--app-title-end));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.app-subtitle {
+  max-width: min(52vw, 560px);
+  overflow: hidden;
+  color: var(--app-text-muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.header-label,
+.about-meta {
+  color: var(--app-text-muted);
+}
+
+.about-meta {
+  font-size: 15px;
+}
+
+.about-meta + .about-meta {
+  margin-top: 4px;
+}
+
+.app-content {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--app-bg);
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 1080px) {
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.field-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.slider-row .ant-slider {
+  flex: 1;
+}
+
+.slider-value {
+  width: 52px;
+  text-align: right;
+  color: var(--app-text-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.log-panel {
+  height: 150px;
+  overflow-y: auto;
+  background: var(--app-log-bg);
+  border: 1px solid var(--app-log-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: 'Cascadia Code', 'Consolas', monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--app-text-soft);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.log-empty {
+  color: var(--app-text-muted);
+}
+
+/* Alignment table row states */
+.row-error td {
+  background: var(--app-row-error) !important;
+}
+.row-review td {
+  background: var(--app-row-review) !important;
+}
+.row-ok td {
+  background: var(--app-row-ok) !important;
+}
+
+.review-body {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .review-body {
+    grid-template-columns: 1fr;
+  }
+}
+
+.preview-media {
+  width: 100%;
+  background: #000;
+  border-radius: 8px;
+  max-height: 320px;
+}
+
+.preview-controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.timeline-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.timeline-row .ant-slider {
+  flex: 1;
+}
+
+.time-label {
+  min-width: 116px;
+  text-align: right;
+  color: var(--app-text-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.waveform-canvas {
+  width: 100%;
+  height: 200px;
+  display: block;
+  border-radius: 8px;
+  background: var(--app-waveform-bg);
+  cursor: grab;
+  touch-action: none;
+}
+
+.waveform-canvas.dragging {
+  cursor: grabbing;
+}
+
+.adjust-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
