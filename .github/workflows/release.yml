@@ -1,0 +1,93 @@
+name: Build release
+
+on:
+  push:
+    tags:
+      - "*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows-x64
+            executable: dist/RhythmFlow.exe
+            archive: RhythmFlow-windows-x64.zip
+          - os: macos-latest
+            platform: macos
+            executable: dist/RhythmFlow
+            archive: RhythmFlow-macos.zip
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install pyinstaller
+
+      - name: Run tests
+        run: python -m unittest discover -s tests
+
+      - name: Build executable
+        run: python -m PyInstaller --noconfirm rhythmflow.spec
+
+      - name: Package Windows executable
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force release | Out-Null
+          Compress-Archive -Path "${{ matrix.executable }}" -DestinationPath "release/${{ matrix.archive }}" -Force
+
+      - name: Package macOS executable
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          mkdir -p release
+          chmod +x "${{ matrix.executable }}"
+          ditto -c -k --keepParent "${{ matrix.executable }}" "release/${{ matrix.archive }}"
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RhythmFlow-${{ matrix.platform }}
+          path: release/${{ matrix.archive }}
+          if-no-files-found: error
+          retention-days: 30
+
+  release:
+    name: Publish GitHub release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Download workflow artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: RhythmFlow-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Publish release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          name: RhythmFlow ${{ github.ref_name }}
+          generate_release_notes: true
+          files: release-assets/*
