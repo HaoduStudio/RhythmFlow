@@ -8,6 +8,8 @@ FMAX = 5000.0
 
 ORG_NAME = "HaoduStudio"
 APP_NAME = "RhythmFlow"
+APP_AUTHOR = "HaoduStudio"
+REPOSITORY_URL = "https://github.com/HaoduStudio/RhythmFlow"
 
 DEFAULT_ORIGINAL_VOLUME = 15
 DEFAULT_REFERENCE_VOLUME = 100

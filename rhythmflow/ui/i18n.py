@@ -9,6 +9,12 @@ LANGUAGE_NAMES = {
 TRANSLATIONS: dict[str, dict[str, str]] = {
     "en": {
         "language": "Language",
+        "about_button": "About RhythmFlow",
+        "about_title": "About RhythmFlow",
+        "about_app_name": "Software name",
+        "about_version": "Software version",
+        "about_author": "Author",
+        "about_repository": "Open source repository",
         "inputs": "Inputs",
         "handcam_videos": "Hand-cam videos",
         "add": "Add",
@@ -91,6 +97,12 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
     },
     "zh": {
         "language": "语言",
+        "about_button": "关于 RhythmFlow",
+        "about_title": "关于 RhythmFlow",
+        "about_app_name": "软件名称",
+        "about_version": "软件版本",
+        "about_author": "作者名称",
+        "about_repository": "开源仓库地址",
         "inputs": "输入",
         "handcam_videos": "手元视频",
         "add": "添加",

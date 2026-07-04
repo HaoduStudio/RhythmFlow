@@ -24,6 +24,7 @@ from PyQt6.QtWidgets import (
     QPushButton,
     QProgressBar,
     QSlider,
+    QStyle,
     QTableWidget,
     QTableWidgetItem,
     QTextEdit,
@@ -32,14 +33,17 @@ from PyQt6.QtWidgets import (
 )
 
 from rhythmflow.config import (
+    APP_AUTHOR,
     APP_NAME,
     DEFAULT_LANGUAGE,
     DEFAULT_ORIGINAL_VOLUME,
     DEFAULT_OUTPUT_PATTERN,
     DEFAULT_REFERENCE_VOLUME,
     ORG_NAME,
+    REPOSITORY_URL,
     SettingsKeys,
 )
+from rhythmflow import __version__
 from rhythmflow.core.pipeline import ProcessJob, build_output_path
 from rhythmflow.core.segmented_alignment import ReferenceSegment
 from rhythmflow.logging_setup import record_metric
@@ -83,6 +87,12 @@ class MainWindow(QMainWindow):
         title.setStyleSheet("font-size: 28px; font-weight: 700;")
         top_row.addWidget(title)
         top_row.addStretch(1)
+        self.about_button = QPushButton()
+        self.about_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_MessageBoxInformation))
+        self.about_button.setFixedSize(34, 34)
+        self.about_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.about_button.clicked.connect(self._show_about_dialog)
+        top_row.addWidget(self.about_button)
         self.language_label = QLabel()
         self.language_combo = QComboBox()
         self._configure_language_combo()
@@ -240,6 +250,24 @@ class MainWindow(QMainWindow):
         view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.language_combo.setView(view)
 
+    def _show_about_dialog(self) -> None:
+        message = QMessageBox(self)
+        message.setWindowTitle(tr(self.language, "about_title"))
+        message.setIcon(QMessageBox.Icon.Information)
+        message.setText(
+            "<dl>"
+            f"<dt><b>{tr(self.language, 'about_app_name')}</b></dt><dd>{APP_NAME}</dd>"
+            f"<dt><b>{tr(self.language, 'about_version')}</b></dt><dd>{__version__}</dd>"
+            f"<dt><b>{tr(self.language, 'about_author')}</b></dt><dd>{APP_AUTHOR}</dd>"
+            f"<dt><b>{tr(self.language, 'about_repository')}</b></dt>"
+            f"<dd><a href=\"{REPOSITORY_URL}\">{REPOSITORY_URL}</a></dd>"
+            "</dl>"
+        )
+        message.setTextFormat(Qt.TextFormat.RichText)
+        message.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
+        message.setStandardButtons(QMessageBox.StandardButton.Ok)
+        message.exec()
+
     def _restore_settings(self) -> None:
         language_index = self.language_combo.findData(self.language)
         if language_index >= 0:
@@ -310,6 +338,8 @@ class MainWindow(QMainWindow):
         logger.info("Language changed to %s", self.language)
 
     def _retranslate_ui(self) -> None:
+        self.about_button.setAccessibleName(tr(self.language, "about_button"))
+        self.about_button.setToolTip(tr(self.language, "about_button"))
         self.language_label.setText(tr(self.language, "language"))
         self.inputs_box.setTitle(tr(self.language, "inputs"))
         self.handcam_label.setText(tr(self.language, "handcam_videos"))
