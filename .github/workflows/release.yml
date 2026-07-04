@@ -19,11 +19,9 @@ jobs:
         include:
           - os: windows-latest
             platform: windows-x64
-            executable: dist/RhythmFlow.exe
             archive: RhythmFlow-windows-x64.zip
           - os: macos-latest
             platform: macos
-            executable: dist/RhythmFlow
             archive: RhythmFlow-macos.zip
 
     steps:
@@ -45,23 +43,42 @@ jobs:
       - name: Run tests
         run: python -m unittest discover -s tests
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: rhythmflow/webui/frontend/package-lock.json
+
+      - name: Build front-end
+        working-directory: rhythmflow/webui/frontend
+        run: |
+          npm ci
+          npm run build
+
       - name: Build executable
         run: python -m PyInstaller --noconfirm rhythmflow.spec
 
-      - name: Package Windows executable
+      - name: Package Windows build (one-dir exe)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
+          if (-not (Test-Path "dist/RhythmFlow/RhythmFlow.exe")) {
+            throw "Build output not found: dist/RhythmFlow/RhythmFlow.exe"
+          }
           New-Item -ItemType Directory -Force release | Out-Null
-          Compress-Archive -Path "${{ matrix.executable }}" -DestinationPath "release/${{ matrix.archive }}" -Force
+          Compress-Archive -Path "dist/RhythmFlow" -DestinationPath "release/${{ matrix.archive }}" -Force
 
-      - name: Package macOS executable
+      - name: Package macOS build (.app bundle)
         if: runner.os == 'macOS'
         shell: bash
         run: |
+          if [ ! -d "dist/RhythmFlow.app" ]; then
+            echo "Build output not found: dist/RhythmFlow.app"
+            exit 1
+          fi
           mkdir -p release
-          chmod +x "${{ matrix.executable }}"
-          ditto -c -k --keepParent "${{ matrix.executable }}" "release/${{ matrix.archive }}"
+          ditto -c -k --keepParent "dist/RhythmFlow.app" "release/${{ matrix.archive }}"
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
@@ -75,15 +92,24 @@ jobs:
     name: Publish GitHub release
     needs: build
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
+    if: always() && startsWith(github.ref, 'refs/tags/')
 
     steps:
       - name: Download workflow artifacts
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           pattern: RhythmFlow-*
           path: release-assets
           merge-multiple: true
+
+      - name: Check release assets
+        shell: bash
+        run: |
+          if ! find release-assets -type f -name "*.zip" | grep -q .; then
+            echo "No release assets were built successfully."
+            exit 1
+          fi
 
       - name: Publish release assets
         uses: softprops/action-gh-release@v2
