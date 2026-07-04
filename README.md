@@ -14,14 +14,21 @@ RhythmFlow is a desktop tool for aligning hand-cam arcade rhythm-game videos to 
 - Accurate re-encode mode and fast stream-copy mode.
 - Original/reference volume blend, including full replacement.
 - Bundled ffmpeg through `imageio-ffmpeg`; system ffmpeg is used first if available.
-- Dark qt-material theme.
+- Modern desktop UI built with pywebview + React + Ant Design.
 - Chinese and English UI switching.
 
 ## Setup
 
+Install the Python dependencies and build the front end (Node.js 18+ required):
+
 ```powershell
 py -3 -m pip install -r requirements.txt
 py -3 -m pip install pyinstaller
+
+cd rhythmflow/webui/frontend
+npm install
+npm run build
+cd ../../..
 ```
 
 Run the app:
@@ -46,15 +53,21 @@ py -3 -m rhythmflow
 
 ## Build
 
+Build the front end first, then package the executable:
+
 ```powershell
+cd rhythmflow/webui/frontend; npm install; npm run build; cd ../../..
 py -3 -m PyInstaller --noconfirm rhythmflow.spec
 ```
 
-Run:
+This produces a one-folder build. Run it:
 
 ```powershell
-.\dist\RhythmFlow.exe
+# Windows
+.\dist\RhythmFlow\RhythmFlow.exe
 ```
+
+On macOS the build is packaged as an app bundle at `dist/RhythmFlow.app`.
 
 ## Verification
 
