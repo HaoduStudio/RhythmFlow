@@ -1,0 +1,8 @@
+PyQt6>=6.7
+qt-material>=2.14
+sentry-sdk>=2.35.0
+numpy>=2.0
+scipy>=1.14
+imageio-ffmpeg>=0.5
+librosa>=0.10
+pydub>=0.25
