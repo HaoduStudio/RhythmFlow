@@ -4,7 +4,7 @@ import logging
 import re
 from collections.abc import Callable
 from dataclasses import dataclass, replace
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 from rhythmflow.core.segmented_alignment import ReferenceSegment
 
@@ -64,7 +64,12 @@ def compute_cut_window(offset_s: float, ref_duration_s: float, video_duration_s:
 
 
 def build_output_path(video_path: str, output_dir: str, pattern: str, index: int = 1) -> str:
-    video = Path(video_path)
+    if _looks_like_windows_path(video_path) or _looks_like_windows_path(output_dir):
+        video = PureWindowsPath(video_path)
+        output_base = PureWindowsPath(output_dir)
+    else:
+        video = Path(video_path)
+        output_base = Path(output_dir).expanduser().resolve()
     safe_name = _safe_filename(video.stem)
     pattern = pattern.strip() or "{name}_aligned.mp4"
     filename = pattern.format(
@@ -75,7 +80,7 @@ def build_output_path(video_path: str, output_dir: str, pattern: str, index: int
     )
     if Path(filename).suffix.lower() != ".mp4":
         filename += ".mp4"
-    output_path = str(Path(output_dir).expanduser().resolve() / filename)
+    output_path = str(output_base / filename)
     logger.info("Built output path for %s: %s", video_path, output_path)
     return output_path
 
@@ -563,3 +568,7 @@ def _requires_video_filter(segments: tuple[ReferenceSegment, ...]) -> bool:
 def _safe_filename(value: str) -> str:
     cleaned = re.sub(r'[<>:"/\\|?*\x00-\x1f]+', "_", value).strip(" .")
     return cleaned or "video"
+
+
+def _looks_like_windows_path(value: str) -> bool:
+    return bool(re.match(r"^[a-zA-Z]:[\\/]", value) or value.startswith("\\\\"))
