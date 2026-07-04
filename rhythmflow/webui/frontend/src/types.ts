@@ -2,6 +2,8 @@ export type Language = 'zh' | 'en';
 
 export type CutMode = 'accurate' | 'fast';
 
+export type ReferenceGame = 'maimai' | 'chunithm';
+
 export interface Settings {
   language: Language;
   output_dir: string;
@@ -72,6 +74,23 @@ export interface AboutInfo {
   version: string;
   author: string;
   repository: string;
+}
+
+export interface ReferenceSong {
+  id: string;
+  title: string;
+  artist: string;
+  version: string;
+  genre: string;
+  difficulty_summary: string;
+  difficulties: ReferenceDifficulty[];
+  asset_song_id: string;
+}
+
+export interface ReferenceDifficulty {
+  label: string;
+  level: string;
+  index: number | null;
 }
 
 export interface ReviewDelta {

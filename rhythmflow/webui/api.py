@@ -7,8 +7,15 @@ from typing import Any
 
 from rhythmflow import __version__
 from rhythmflow.config import APP_AUTHOR, APP_NAME, REPOSITORY_URL
+from rhythmflow.config import SettingsKeys
 from rhythmflow.webui import tasks
 from rhythmflow.webui.events import Emitter
+from rhythmflow.webui.lxns import (
+    LxnsError,
+    LxnsReferenceAudioService,
+    is_probably_mp3,
+    is_reference_audio_cache_path,
+)
 from rhythmflow.webui.media_server import MediaServer
 from rhythmflow.webui.settings import load_settings, save_settings
 from rhythmflow.webui.state import AppState, JobBuildError
@@ -25,6 +32,7 @@ class Api:
         self.emitter = emitter
         self.media_server = media_server
         self.state = AppState()
+        self.lxns = LxnsReferenceAudioService()
         self._window: Any | None = None
         self._thread: threading.Thread | None = None
         self._busy = False
@@ -66,6 +74,47 @@ class Api:
     def pick_reference(self) -> str | None:
         result = self._open_dialog(allow_multiple=False, file_types=_AUDIO_FILE_TYPES)
         return result[0] if result else None
+
+    def search_reference_songs(self, game: str, query: str = "") -> list[dict[str, Any]]:
+        songs = self.lxns.search_songs(game, query)
+        return [
+            {
+                key: song[key]
+                for key in (
+                    "id",
+                    "title",
+                    "artist",
+                    "version",
+                    "genre",
+                    "difficulty_summary",
+                    "difficulties",
+                    "asset_song_id",
+                )
+            }
+            for song in songs
+        ]
+
+    def download_reference_audio(
+        self,
+        game: str,
+        asset_song_id: str,
+        title: str,
+        persist: bool = False,
+    ) -> dict[str, Any]:
+        settings = load_settings()
+        output_dir = self.state.output_dir or str(settings.get(SettingsKeys.OUTPUT_DIR) or "")
+        try:
+            path = self.lxns.download_audio(
+                game,
+                asset_song_id,
+                title,
+                persist=bool(persist),
+                output_dir=output_dir,
+            )
+        except LxnsError as exc:
+            logger.warning("Could not download LXNS reference audio: %s", exc)
+            return {"ok": False, "error": str(exc)}
+        return {"ok": True, "path": path}
 
     def pick_output_dir(self) -> str | None:
         if self._window is None:
@@ -112,6 +161,8 @@ class Api:
             return {"ok": False, "error": "warn_add_video"}
         if not reference:
             return {"ok": False, "error": "warn_choose_reference"}
+        if is_reference_audio_cache_path(reference) and not is_probably_mp3(reference):
+            return {"ok": False, "error": "warn_reference_cache_invalid"}
 
         self.state.sync_rows(list(videos))
         language = self.state.language

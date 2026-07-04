@@ -35,6 +35,10 @@ def _config_dir() -> Path:
     return Path.home() / f".{APP_NAME.lower()}"
 
 
+def config_dir() -> Path:
+    return _config_dir()
+
+
 def _settings_path() -> Path:
     return _config_dir() / "settings.json"
 

@@ -1,8 +1,15 @@
-import { ClearOutlined, DeleteOutlined, FolderOpenOutlined, PlusOutlined } from '@ant-design/icons';
+import {
+  ClearOutlined,
+  DeleteOutlined,
+  DownloadOutlined,
+  FolderOpenOutlined,
+  PlusOutlined,
+} from '@ant-design/icons';
 import { Button, Card, Input, Space, Table, Tooltip, Typography } from 'antd';
 import { useEffect, useState } from 'react';
 import { t } from '../i18n';
 import { useStore } from '../store';
+import { ReferenceAudioPickerModal } from './ReferenceAudioPickerModal';
 
 export function InputsCard(): JSX.Element {
   const store = useStore();
@@ -11,6 +18,7 @@ export function InputsCard(): JSX.Element {
   const [selected, setSelected] = useState<string[]>([]);
   const [outputDir, setOutputDir] = useState(settings.output_dir);
   const [pattern, setPattern] = useState(settings.output_pattern);
+  const [referencePickerOpen, setReferencePickerOpen] = useState(false);
 
   useEffect(() => setOutputDir(settings.output_dir), [settings.output_dir]);
   useEffect(() => setPattern(settings.output_pattern), [settings.output_pattern]);
@@ -66,7 +74,19 @@ export function InputsCard(): JSX.Element {
       </Space>
 
       <div style={{ marginTop: 16 }}>
-        <Typography.Text type="secondary">{t(lang, 'reference_audio')}</Typography.Text>
+        <Space size={6}>
+          <Typography.Text type="secondary">{t(lang, 'reference_audio')}</Typography.Text>
+          <Tooltip title={t(lang, 'reference_audio_library')}>
+            <Button
+              type="text"
+              size="small"
+              aria-label={t(lang, 'reference_audio_library')}
+              icon={<DownloadOutlined />}
+              disabled={store.busy}
+              onClick={() => setReferencePickerOpen(true)}
+            />
+          </Tooltip>
+        </Space>
         <div className="field-row" style={{ marginTop: 6 }}>
           <Input
             value={store.reference}
@@ -79,6 +99,10 @@ export function InputsCard(): JSX.Element {
           </Button>
         </div>
       </div>
+      <ReferenceAudioPickerModal
+        open={referencePickerOpen}
+        onClose={() => setReferencePickerOpen(false)}
+      />
 
       <div style={{ marginTop: 12 }}>
         <Typography.Text type="secondary">{t(lang, 'output_directory')}</Typography.Text>

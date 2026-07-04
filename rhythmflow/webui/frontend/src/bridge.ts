@@ -2,6 +2,8 @@ import type {
   AboutInfo,
   AppContext,
   CommandResult,
+  ReferenceGame,
+  ReferenceSong,
   ReviewDelta,
   ReviewSegment,
   RowState,
@@ -18,6 +20,13 @@ export interface RhythmApi {
   register_media(path: string): Promise<string>;
   pick_videos(): Promise<string[]>;
   pick_reference(): Promise<string | null>;
+  search_reference_songs(game: ReferenceGame, query: string): Promise<ReferenceSong[]>;
+  download_reference_audio(
+    game: ReferenceGame,
+    assetSongId: string,
+    title: string,
+    persist: boolean,
+  ): Promise<{ ok: boolean; path?: string; error?: string }>;
   pick_output_dir(): Promise<string | null>;
   sync_rows(paths: string[], context: AppContext): Promise<RowState[]>;
   set_nudge(row: number, value: number): Promise<RowState | null>;
@@ -174,6 +183,78 @@ function createMockApi(emit: (m: { event: string; payload: unknown }) => void): 
     },
     async pick_reference() {
       return 'E:/samples/reference.wav';
+    },
+    async search_reference_songs(game, query) {
+      const songs: ReferenceSong[] =
+        game === 'maimai'
+          ? [
+              {
+                id: '1001',
+                title: 'Stellar Parade',
+                artist: 'Sample Artist',
+                version: 'BUDDiES',
+                genre: 'POPS',
+                difficulty_summary: 'MASTER 13 / Re:MASTER 14',
+                difficulties: [
+                  { label: 'MASTER', level: '13', index: 3 },
+                  { label: 'Re:MASTER', level: '14', index: 4 },
+                ],
+                asset_song_id: '1001',
+              },
+              {
+                id: '1002',
+                title: 'Blue Mirage',
+                artist: 'RhythmFlow',
+                version: 'Festival',
+                genre: 'Game',
+                difficulty_summary: 'EXPERT 11+ / MASTER 13+',
+                difficulties: [
+                  { label: 'BASIC', level: '4', index: 0 },
+                  { label: 'ADVANCED', level: '8', index: 1 },
+                  { label: 'EXPERT', level: '11+', index: 2 },
+                  { label: 'MASTER', level: '13+', index: 3 },
+                ],
+                asset_song_id: '1002',
+              },
+            ]
+          : [
+              {
+                id: '3001',
+                title: "World's End Song",
+                artist: 'Chuni Artist',
+                version: 'SUN',
+                genre: 'VARIETY',
+                difficulty_summary: "WORLD'S END 避",
+                difficulties: [{ label: "WORLD'S END", level: '避', index: 5 }],
+                asset_song_id: '8888',
+              },
+              {
+                id: '3002',
+                title: 'Luminous Rail',
+                artist: 'Sample Artist',
+                version: 'VERSE',
+                genre: 'ORIGINAL',
+                difficulty_summary: 'MASTER 13',
+                difficulties: [
+                  { label: 'MASTER', level: '13', index: 3 },
+                  { label: 'ULTIMA', level: '14+', index: 4 },
+                ],
+                asset_song_id: '3002',
+              },
+            ];
+      const needle = query.trim().toLowerCase();
+      if (!needle) return songs;
+      return songs.filter((song) =>
+        [song.id, song.title, song.artist, song.version, song.genre, song.difficulty_summary]
+          .join(' ')
+          .toLowerCase()
+          .includes(needle),
+      );
+    },
+    async download_reference_audio(game, assetSongId, title, persist) {
+      const root = persist ? settings.output_dir : 'E:/Code/RhythmFlow/cache';
+      const safeTitle = title.replace(/[<>:"/\\|?*]/g, '_');
+      return { ok: true, path: `${root}/${game}_${assetSongId}_${safeTitle}.mp3` };
     },
     async pick_output_dir() {
       return 'E:/Code/RhythmFlow/output';

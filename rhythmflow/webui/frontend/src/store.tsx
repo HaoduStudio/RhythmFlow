@@ -14,6 +14,8 @@ import { t } from './i18n';
 import type {
   AppContext as ApiContext,
   Language,
+  ReferenceGame,
+  ReferenceSong,
   ReviewDelta,
   ReviewSegment,
   RowState,
@@ -110,6 +112,13 @@ export interface StoreValue extends State {
   clearVideos: () => Promise<void>;
   pickReference: () => Promise<void>;
   pickOutputDir: () => Promise<void>;
+  searchReferenceSongs: (game: ReferenceGame, query: string) => Promise<ReferenceSong[]>;
+  downloadReferenceAudio: (
+    game: ReferenceGame,
+    assetSongId: string,
+    title: string,
+    persist: boolean,
+  ) => Promise<string>;
   setReference: (value: string) => void;
   setNudge: (row: number, value: number) => Promise<void>;
   updateSettings: (patch: Partial<Settings>) => void;
@@ -252,6 +261,28 @@ export function StoreProvider({ children }: { children: ReactNode }): JSX.Elemen
     if (picked) dispatch({ type: 'reference', reference: picked });
   }, []);
 
+  const searchReferenceSongs = useCallback(
+    async (game: ReferenceGame, query: string) => {
+      const api = apiRef.current;
+      if (!api) return [];
+      return api.search_reference_songs(game, query);
+    },
+    [],
+  );
+
+  const downloadReferenceAudio = useCallback(
+    async (game: ReferenceGame, assetSongId: string, title: string, persistReference: boolean) => {
+      const api = apiRef.current;
+      if (!api) throw new Error('API not ready');
+      const result = await api.download_reference_audio(game, assetSongId, title, persistReference);
+      if (!result.ok || !result.path) {
+        throw new Error(result.error || 'download failed');
+      }
+      return result.path;
+    },
+    [],
+  );
+
   const persist = useCallback((patch: Partial<Settings>) => {
     apiRef.current?.save_settings(patch);
   }, []);
@@ -344,6 +375,8 @@ export function StoreProvider({ children }: { children: ReactNode }): JSX.Elemen
       clearVideos,
       pickReference,
       pickOutputDir,
+      searchReferenceSongs,
+      downloadReferenceAudio,
       setReference,
       setNudge,
       updateSettings,
@@ -363,6 +396,8 @@ export function StoreProvider({ children }: { children: ReactNode }): JSX.Elemen
       clearVideos,
       pickReference,
       pickOutputDir,
+      searchReferenceSongs,
+      downloadReferenceAudio,
       setReference,
       setNudge,
       updateSettings,
