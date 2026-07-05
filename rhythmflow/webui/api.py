@@ -1,7 +1,13 @@
 from __future__ import annotations
 
+import base64
+import binascii
+from dataclasses import dataclass
 import logging
+from pathlib import Path, PureWindowsPath
+import re
 import threading
+import uuid
 import webbrowser
 from typing import Any
 
@@ -25,6 +31,14 @@ logger = logging.getLogger(__name__)
 
 _VIDEO_FILE_TYPES = ("Video files (*.mp4;*.mkv;*.mov;*.avi;*.webm)", "All files (*.*)")
 _AUDIO_FILE_TYPES = ("Audio files (*.mp3;*.m4a;*.wav;*.flac;*.aac;*.ogg)", "All files (*.*)")
+_INVALID_FILENAME_CHARS = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
+
+
+@dataclass
+class _OsuExportSession:
+    output_path: Path
+    temp_path: Path
+    bytes_written: int = 0
 
 
 class Api:
@@ -36,6 +50,7 @@ class Api:
         self._window: Any | None = None
         self._thread: threading.Thread | None = None
         self._busy = False
+        self._osu_exports: dict[str, _OsuExportSession] = {}
 
     def set_window(self, window: Any) -> None:
         self._window = window
@@ -125,6 +140,64 @@ class Api:
             return str(result[0])
         return None
 
+    def begin_osu_export(self, filename: str) -> dict[str, Any]:
+        try:
+            output_dir = self._current_output_dir()
+            output_dir.mkdir(parents=True, exist_ok=True)
+            output_path = _unique_output_path(output_dir / _safe_output_filename(filename))
+            token = uuid.uuid4().hex
+            temp_path = output_path.with_name(f".{output_path.name}.{token}.part")
+            temp_path.write_bytes(b"")
+        except OSError as exc:
+            logger.warning("Could not start osu export: %s", exc, exc_info=True)
+            return {"ok": False, "error": str(exc)}
+
+        self._osu_exports[token] = _OsuExportSession(output_path=output_path, temp_path=temp_path)
+        return {"ok": True, "token": token, "output_path": str(output_path)}
+
+    def append_osu_export_chunk(self, token: str, chunk_base64: str) -> dict[str, Any]:
+        session = self._osu_exports.get(str(token))
+        if session is None:
+            return {"ok": False, "error": "invalid_export_session"}
+
+        try:
+            chunk = base64.b64decode(str(chunk_base64), validate=True)
+            with session.temp_path.open("ab") as file:
+                file.write(chunk)
+            session.bytes_written += len(chunk)
+        except (binascii.Error, OSError, ValueError) as exc:
+            logger.warning("Could not append osu export chunk: %s", exc, exc_info=True)
+            return {"ok": False, "error": str(exc)}
+
+        return {"ok": True, "bytes": session.bytes_written}
+
+    def finish_osu_export(self, token: str) -> dict[str, Any]:
+        session = self._osu_exports.pop(str(token), None)
+        if session is None:
+            return {"ok": False, "error": "invalid_export_session"}
+
+        try:
+            if session.bytes_written <= 0:
+                raise OSError("export produced an empty file")
+            session.temp_path.replace(session.output_path)
+        except OSError as exc:
+            _unlink_quietly(session.temp_path)
+            logger.warning("Could not finish osu export: %s", exc, exc_info=True)
+            return {"ok": False, "error": str(exc)}
+
+        logger.info("osu export saved: %s", session.output_path)
+        return {
+            "ok": True,
+            "output_path": str(session.output_path),
+            "bytes": session.bytes_written,
+        }
+
+    def abort_osu_export(self, token: str) -> dict[str, Any]:
+        session = self._osu_exports.pop(str(token), None)
+        if session is not None:
+            _unlink_quietly(session.temp_path)
+        return {"ok": True}
+
     def _open_dialog(self, *, allow_multiple: bool, file_types: tuple[str, ...]) -> list[str]:
         if self._window is None:
             return []
@@ -135,6 +208,15 @@ class Api:
             file_types=file_types,
         )
         return [str(path) for path in result] if result else []
+
+    def _current_output_dir(self) -> Path:
+        settings = load_settings()
+        output_dir = (
+            self.state.output_dir
+            or str(settings.get(SettingsKeys.OUTPUT_DIR) or "")
+            or str(Path.cwd() / "output")
+        )
+        return Path(output_dir).expanduser()
 
     def sync_rows(self, paths: list[str], context: dict[str, Any] | None = None) -> list[dict[str, Any]]:
         self.state.update_context(context)
@@ -257,3 +339,38 @@ def _context_from_settings(settings: dict[str, Any]) -> dict[str, Any]:
         "reference_volume": settings.get(SettingsKeys.REFERENCE_VOLUME),
         "mode": settings.get(SettingsKeys.CUT_MODE),
     }
+
+
+def _safe_output_filename(filename: str) -> str:
+    raw = PureWindowsPath(str(filename or "")).name
+    raw = Path(raw).name
+    cleaned = _INVALID_FILENAME_CHARS.sub("_", raw).strip(" .")
+    if not cleaned:
+        cleaned = "osu_export.mp4"
+    if "." not in cleaned:
+        cleaned = f"{cleaned}.mp4"
+    if len(cleaned) <= 180:
+        return cleaned
+
+    suffix = Path(cleaned).suffix[:16]
+    stem_limit = max(1, 180 - len(suffix))
+    return f"{Path(cleaned).stem[:stem_limit]}{suffix}"
+
+
+def _unique_output_path(path: Path) -> Path:
+    if not path.exists():
+        return path
+    for index in range(2, 10000):
+        candidate = path.with_name(f"{path.stem}_{index}{path.suffix}")
+        if not candidate.exists():
+            return candidate
+    raise OSError(f"Could not find available filename for {path.name}")
+
+
+def _unlink_quietly(path: Path) -> None:
+    try:
+        path.unlink()
+    except FileNotFoundError:
+        return
+    except OSError:
+        logger.warning("Could not delete temporary export file: %s", path, exc_info=True)

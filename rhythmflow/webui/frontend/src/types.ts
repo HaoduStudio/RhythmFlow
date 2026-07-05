@@ -1,5 +1,7 @@
 export type Language = 'zh' | 'en';
 
+export type AppPage = 'smart' | 'osu';
+
 export type CutMode = 'accurate' | 'fast';
 
 export type ReferenceGame = 'maimai' | 'chunithm';

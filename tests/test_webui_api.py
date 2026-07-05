@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import base64
 import os
 import tempfile
 import unittest
 from pathlib import Path
 
+from rhythmflow.config import SettingsKeys
 from rhythmflow.webui.api import Api
 from rhythmflow.webui.events import Emitter
 from rhythmflow.webui.lxns import LxnsError
@@ -47,6 +49,40 @@ class ApiReferenceAudioTests(unittest.TestCase):
 
         self.assertFalse(result["ok"])
         self.assertEqual(result["error"], "asset challenge failed")
+
+    def test_osu_export_writes_chunks_to_output_dir(self) -> None:
+        output_dir = Path(self._tmp.name) / "output"
+        api = Api(Emitter(), MediaServer(None))
+        api.save_settings({SettingsKeys.OUTPUT_DIR: str(output_dir)})
+
+        started = api.begin_osu_export("../bad:name.mp4")
+        self.assertTrue(started["ok"])
+        token = str(started["token"])
+        first = base64.b64encode(b"hello ").decode("ascii")
+        second = base64.b64encode(b"osu").decode("ascii")
+
+        self.assertTrue(api.append_osu_export_chunk(token, first)["ok"])
+        self.assertTrue(api.append_osu_export_chunk(token, second)["ok"])
+        finished = api.finish_osu_export(token)
+
+        self.assertTrue(finished["ok"])
+        path = Path(str(finished["output_path"]))
+        self.assertEqual(path.parent, output_dir)
+        self.assertEqual(path.read_bytes(), b"hello osu")
+        self.assertNotIn("..", path.name)
+        self.assertNotIn(":", path.name)
+
+    def test_osu_export_uses_unique_output_name(self) -> None:
+        output_dir = Path(self._tmp.name) / "output"
+        output_dir.mkdir()
+        (output_dir / "replay.mp4").write_bytes(b"existing")
+        api = Api(Emitter(), MediaServer(None))
+        api.save_settings({SettingsKeys.OUTPUT_DIR: str(output_dir)})
+
+        started = api.begin_osu_export("replay.mp4")
+
+        self.assertTrue(started["ok"])
+        self.assertEqual(Path(str(started["output_path"])).name, "replay_2.mp4")
 
 
 if __name__ == "__main__":

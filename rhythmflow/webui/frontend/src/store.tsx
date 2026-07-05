@@ -13,6 +13,7 @@ import { getApi, onEvent, type RhythmApi } from './bridge';
 import { t } from './i18n';
 import type {
   AppContext as ApiContext,
+  AppPage,
   Language,
   ReferenceGame,
   ReferenceSong,
@@ -24,6 +25,7 @@ import type {
 
 interface State {
   ready: boolean;
+  page: AppPage;
   settings: Settings;
   reference: string;
   rows: RowState[];
@@ -46,6 +48,7 @@ const DEFAULT_SETTINGS: Settings = {
 
 const initialState: State = {
   ready: false,
+  page: 'smart',
   settings: DEFAULT_SETTINGS,
   reference: '',
   rows: [],
@@ -59,6 +62,7 @@ const initialState: State = {
 
 type Action =
   | { type: 'ready'; settings: Settings }
+  | { type: 'page'; page: AppPage }
   | { type: 'settings'; settings: Settings }
   | { type: 'reference'; reference: string }
   | { type: 'rows'; rows: RowState[] }
@@ -73,6 +77,8 @@ function reducer(state: State, action: Action): State {
   switch (action.type) {
     case 'ready':
       return { ...state, ready: true, settings: action.settings };
+    case 'page':
+      return { ...state, page: action.page };
     case 'settings':
       return { ...state, settings: action.settings };
     case 'reference':
@@ -107,6 +113,7 @@ function reducer(state: State, action: Action): State {
 
 export interface StoreValue extends State {
   language: Language;
+  setPage: (page: AppPage) => void;
   addVideos: () => Promise<void>;
   removeVideos: (paths: string[]) => Promise<void>;
   clearVideos: () => Promise<void>;
@@ -370,6 +377,7 @@ export function StoreProvider({ children }: { children: ReactNode }): JSX.Elemen
     () => ({
       ...state,
       language: state.settings.language,
+      setPage: (page: AppPage) => dispatch({ type: 'page', page }),
       addVideos,
       removeVideos,
       clearVideos,

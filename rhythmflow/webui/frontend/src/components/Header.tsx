@@ -1,11 +1,17 @@
-import { InfoCircleOutlined, MoonOutlined, SunOutlined } from '@ant-design/icons';
-import { Button, Select, Space, Switch, Tooltip } from 'antd';
+import {
+  InfoCircleOutlined,
+  MoonOutlined,
+  PlaySquareOutlined,
+  ScissorOutlined,
+  SunOutlined,
+} from '@ant-design/icons';
+import { Button, Menu, Select, Space, Switch, Tooltip } from 'antd';
 import { useMemo } from 'react';
 import { t } from '../i18n';
 import { useStore } from '../store';
 import { pickSubtitle } from '../subtitles';
 import { useThemeMode } from '../themeMode';
-import type { Language } from '../types';
+import type { AppPage, Language } from '../types';
 
 export function AppHeader(): JSX.Element {
   const store = useStore();
@@ -19,8 +25,18 @@ export function AppHeader(): JSX.Element {
         <div className="app-title">RhythmFlow</div>
         <div className="app-subtitle">{subtitle}</div>
       </div>
-      <div style={{ flex: 1 }} />
-      <Space size={12}>
+      <Menu
+        disabledOverflow
+        mode="horizontal"
+        className="app-nav"
+        selectedKeys={[store.page]}
+        onClick={({ key }) => store.setPage(key as AppPage)}
+        items={[
+          { key: 'smart', icon: <ScissorOutlined />, label: t(lang, 'menu_smart_edit') },
+          { key: 'osu', icon: <PlaySquareOutlined />, label: t(lang, 'menu_osu_assistant') },
+        ]}
+      />
+      <Space className="app-actions" size={12}>
         <span className="header-label">{t(lang, 'language')}</span>
         <Select<Language>
           value={lang}

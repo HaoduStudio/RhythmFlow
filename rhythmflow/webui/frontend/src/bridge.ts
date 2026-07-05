@@ -28,6 +28,10 @@ export interface RhythmApi {
     persist: boolean,
   ): Promise<{ ok: boolean; path?: string; error?: string }>;
   pick_output_dir(): Promise<string | null>;
+  begin_osu_export(filename: string): Promise<{ ok: boolean; token?: string; output_path?: string; error?: string }>;
+  append_osu_export_chunk(token: string, chunkBase64: string): Promise<{ ok: boolean; bytes?: number; error?: string }>;
+  finish_osu_export(token: string): Promise<{ ok: boolean; output_path?: string; bytes?: number; error?: string }>;
+  abort_osu_export(token: string): Promise<{ ok: boolean; error?: string }>;
   sync_rows(paths: string[], context: AppContext): Promise<RowState[]>;
   set_nudge(row: number, value: number): Promise<RowState | null>;
   get_rows(): Promise<RowState[]>;
@@ -154,6 +158,7 @@ function createMockApi(emit: (m: { event: string; payload: unknown }) => void): 
     warnings: [],
   });
   let counter = 0;
+  const osuExports = new Map<string, { filename: string; chunks: BlobPart[] }>();
   return {
     async get_settings() {
       return settings;
@@ -258,6 +263,42 @@ function createMockApi(emit: (m: { event: string; payload: unknown }) => void): 
     },
     async pick_output_dir() {
       return 'E:/Code/RhythmFlow/output';
+    },
+    async begin_osu_export(filename) {
+      counter += 1;
+      const token = `mock-osu-${counter}`;
+      osuExports.set(token, { filename, chunks: [] });
+      return { ok: true, token, output_path: `${settings.output_dir}/${filename}` };
+    },
+    async append_osu_export_chunk(token, chunkBase64) {
+      const entry = osuExports.get(token);
+      if (!entry) return { ok: false, error: 'invalid_export_session' };
+      const binary = atob(chunkBase64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+      entry.chunks.push(bytes);
+      return { ok: true };
+    },
+    async finish_osu_export(token) {
+      const entry = osuExports.get(token);
+      osuExports.delete(token);
+      if (!entry) return { ok: false, error: 'invalid_export_session' };
+      // Browser dev cannot write to disk — hand the file over as a download instead.
+      const type = entry.filename.toLowerCase().endsWith('.webm') ? 'video/webm' : 'video/mp4';
+      const blob = new Blob(entry.chunks, { type });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = entry.filename;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 4000);
+      return { ok: true, output_path: `${settings.output_dir}/${entry.filename}`, bytes: blob.size };
+    },
+    async abort_osu_export(token) {
+      osuExports.delete(token);
+      return { ok: true };
     },
     async sync_rows(paths) {
       rows = paths.map(makeRow);

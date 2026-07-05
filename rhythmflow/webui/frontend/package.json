@@ -11,8 +11,14 @@
   "dependencies": {
     "@ant-design/icons": "^5.5.1",
     "antd": "^5.21.6",
+    "fflate": "^0.8.3",
+    "mp4-muxer": "^5.2.2",
+    "osu-classes": "^3.1.0",
+    "osu-mania-stable": "^5.0.1",
+    "osu-parsers": "^4.1.7",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "webm-muxer": "^5.1.4"
   },
   "devDependencies": {
     "@types/react": "^18.3.12",
