@@ -54,12 +54,49 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: "24"
-          cache: npm
-          cache-dependency-path: package-lock.json
+          package-manager-cache: false
+
+      - name: Normalize npm metadata
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require("node:fs");
+
+          const packageJsonPath = "package.json";
+          const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+
+          packageJson.scripts = {
+            prepare: "vp config || vp config --no-hooks",
+            build: "vp build",
+            check: "vp check",
+            test: "vp test",
+            dev: "vp dev",
+            preview: "vp preview",
+            ...packageJson.scripts,
+          };
+
+          if (packageJson.devDependencies?.vite === "catalog:") {
+            packageJson.devDependencies.vite = "npm:@voidzero-dev/vite-plus-core@0.2.2";
+          }
+
+          if (packageJson.devDependencies?.["vite-plus"] === "catalog:") {
+            packageJson.devDependencies["vite-plus"] = "0.2.2";
+          }
+
+          delete packageJson.devEngines;
+          packageJson.packageManager = "npm@11.16.0";
+
+          fs.writeFileSync(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`);
+          fs.writeFileSync(".npmrc", "legacy-peer-deps=true\n");
+          fs.rmSync("pnpm-workspace.yaml", { force: true });
+          NODE
 
       - name: Build front-end
         shell: bash
         run: |
+          if [ ! -f package-lock.json ]; then
+            npm install --package-lock-only --ignore-scripts --legacy-peer-deps
+          fi
           npm ci --legacy-peer-deps
           npm run build
 
