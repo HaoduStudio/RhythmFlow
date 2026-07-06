@@ -5,9 +5,17 @@ on:
     tags:
       - "*"
   workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Existing tag to build and publish, for example v0.2.3"
+        required: true
+        type: string
 
 permissions:
   contents: write
+
+env:
+  RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag_name || github.ref_name }}
 
 jobs:
   build:
@@ -26,10 +34,12 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ env.RELEASE_TAG }}
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
           cache: pip
@@ -44,22 +54,17 @@ jobs:
         run: python -m unittest discover -s tests
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: "22"
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
-
-      - name: Set up pnpm
-        shell: bash
-        run: |
-          corepack enable
-          corepack prepare pnpm@11.10.0 --activate
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: package-lock.json
 
       - name: Build front-end
+        shell: bash
         run: |
-          pnpm install --frozen-lockfile
-          pnpm exec vp build
+          npm ci --legacy-peer-deps
+          npm run build
 
       - name: Build executable
         run: python -m PyInstaller --noconfirm rhythmflow.spec
@@ -86,7 +91,7 @@ jobs:
           ditto -c -k --keepParent "dist/RhythmFlow.app" "release/${{ matrix.archive }}"
 
       - name: Upload workflow artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: RhythmFlow-${{ matrix.platform }}
           path: release/${{ matrix.archive }}
@@ -97,11 +102,11 @@ jobs:
     name: Publish GitHub release
     needs: build
     runs-on: ubuntu-latest
-    if: always() && startsWith(github.ref, 'refs/tags/')
+    if: ${{ needs.build.result == 'success' && env.RELEASE_TAG != '' }}
 
     steps:
       - name: Download workflow artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         continue-on-error: true
         with:
           pattern: RhythmFlow-*
@@ -117,7 +122,8 @@ jobs:
           fi
 
       - name: Publish release assets
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
+          tag_name: ${{ env.RELEASE_TAG }}
           generate_release_notes: true
           files: release-assets/*
