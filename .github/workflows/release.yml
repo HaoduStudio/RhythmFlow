@@ -114,6 +114,5 @@ jobs:
       - name: Publish release assets
         uses: softprops/action-gh-release@v2
         with:
-          name: RhythmFlow ${{ github.ref_name }}
           generate_release_notes: true
           files: release-assets/*
