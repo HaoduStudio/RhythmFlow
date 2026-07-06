@@ -1,15 +1,18 @@
 from __future__ import annotations
 
+import json
 import os
 import tempfile
 import unittest
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 
 from rhythmflow.webui.lxns import (
     LxnsError,
     LxnsReferenceAudioService,
     _download_file,
+    _is_cache_fresh,
     is_probably_mp3,
     is_reference_audio_cache_path,
     safe_filename,
@@ -60,6 +63,95 @@ class LxnsReferenceAudioTests(unittest.TestCase):
         song = service.search_songs("chunithm", "ultima")[0]
 
         self.assertEqual(song["difficulties"], [{"label": "ULTIMA", "level": "14+", "index": 4}])
+
+    def test_song_list_cached_on_disk_within_ttl(self) -> None:
+        calls: list[str] = []
+
+        def fetch_json(url: str) -> Any:
+            calls.append(url)
+            return {"songs": _songs()}
+
+        service = LxnsReferenceAudioService(fetch_json=fetch_json)
+
+        first = service.search_songs("maimai", "")
+        second = service.search_songs("maimai", "")
+
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(len(first), len(second))
+        self.assertEqual(first[0]["id"], second[0]["id"])
+        cache_path = Path(self._tmp.name) / "lxns_song_cache" / "maimai.json"
+        self.assertTrue(cache_path.is_file())
+
+    def test_get_cache_updated_at_returns_timestamp_after_load(self) -> None:
+        service = LxnsReferenceAudioService(fetch_json=lambda _url: {"songs": _songs()})
+
+        self.assertIsNone(service.get_cache_updated_at("maimai"))
+        service.search_songs("maimai", "")
+        updated_at = service.get_cache_updated_at("maimai")
+
+        self.assertIsNotNone(updated_at)
+        self.assertTrue(_is_cache_fresh(updated_at or ""))
+
+    def test_refresh_songs_forces_refetch(self) -> None:
+        calls: list[str] = []
+
+        def fetch_json(url: str) -> Any:
+            calls.append(url)
+            return {"songs": _songs()}
+
+        service = LxnsReferenceAudioService(fetch_json=fetch_json)
+
+        service.search_songs("maimai", "")
+        self.assertEqual(len(calls), 1)
+
+        result = service.refresh_songs("maimai")
+
+        self.assertEqual(len(calls), 2)
+        self.assertIn("songs", result)
+        self.assertIn("updated_at", result)
+        self.assertEqual(result["songs"][0]["id"], "1001")
+        self.assertTrue(_is_cache_fresh(result["updated_at"]))
+
+    def test_stale_disk_cache_is_refreshed(self) -> None:
+        cache_path = Path(self._tmp.name) / "lxns_song_cache" / "maimai.json"
+        cache_path.parent.mkdir(parents=True)
+        stale_time = "2020-01-01T00:00:00+00:00"
+        cache_path.write_text(
+            json.dumps({"updated_at": stale_time, "songs": [_songs()[0]]}),
+            encoding="utf-8",
+        )
+        calls: list[str] = []
+
+        def fetch_json(url: str) -> Any:
+            calls.append(url)
+            return {"songs": _songs()}
+
+        service = LxnsReferenceAudioService(fetch_json=fetch_json)
+
+        songs = service.search_songs("maimai", "")
+
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(len(songs), len(_songs()))
+        updated_at = service.get_cache_updated_at("maimai")
+        self.assertIsNotNone(updated_at)
+        self.assertNotEqual(updated_at, stale_time)
+
+    def test_disk_cache_survives_new_instance(self) -> None:
+        calls: list[str] = []
+
+        def fetch_json(url: str) -> Any:
+            calls.append(url)
+            return {"songs": _songs()}
+
+        first_service = LxnsReferenceAudioService(fetch_json=fetch_json)
+        first_service.search_songs("maimai", "")
+        self.assertEqual(len(calls), 1)
+
+        second_service = LxnsReferenceAudioService(fetch_json=fetch_json)
+        songs = second_service.search_songs("maimai", "")
+
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(songs[0]["id"], "1001")
 
     def test_download_uses_default_cache_dir(self) -> None:
         calls: list[str] = []

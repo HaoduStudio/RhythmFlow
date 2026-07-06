@@ -1,4 +1,4 @@
-import { InfoCircleOutlined } from '@ant-design/icons';
+import { InfoCircleOutlined, ReloadOutlined } from '@ant-design/icons';
 import { App, Button, Checkbox, Input, Modal, Space, Table, Tabs, Tag, Tooltip, Typography } from 'antd';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { t } from '../i18n';
@@ -34,6 +34,17 @@ function difficultyText(difficulty: ReferenceDifficulty): string {
   return [difficulty.label, difficulty.level].filter(Boolean).join(' ');
 }
 
+function formatUpdatedAt(lang: 'zh' | 'en', iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  const pad = (value: number) => String(value).padStart(2, '0');
+  const month = pad(date.getMonth() + 1);
+  const day = pad(date.getDate());
+  const hours = pad(date.getHours());
+  const minutes = pad(date.getMinutes());
+  return lang === 'zh' ? `${month}月${day}日 ${hours}:${minutes}` : `${month}/${day} ${hours}:${minutes}`;
+}
+
 function DifficultyTags({ song }: { song: ReferenceSong }): JSX.Element {
   if (!song.difficulties.length) {
     return <Typography.Text type="secondary">{song.difficulty_summary || '-'}</Typography.Text>;
@@ -64,6 +75,7 @@ export function ReferenceAudioPickerModal({ open, onClose }: Props): JSX.Element
   const [persist, setPersist] = useState(false);
   const [queries, setQueries] = useState<Record<ReferenceGame, string>>({ maimai: '', chunithm: '' });
   const [songs, setSongs] = useState<Record<ReferenceGame, ReferenceSong[]>>({ maimai: [], chunithm: [] });
+  const [updatedAt, setUpdatedAt] = useState<Record<ReferenceGame, string | null>>({ maimai: null, chunithm: null });
   const [loaded, setLoaded] = useState<Record<ReferenceGame, boolean>>({ maimai: false, chunithm: false });
   const [loadingGame, setLoadingGame] = useState<ReferenceGame | null>(null);
   const [downloadingKey, setDownloadingKey] = useState<string | null>(null);
@@ -72,12 +84,31 @@ export function ReferenceAudioPickerModal({ open, onClose }: Props): JSX.Element
     async (game: ReferenceGame) => {
       setLoadingGame(game);
       try {
-        const nextSongs = await store.searchReferenceSongs(game, '');
-        setSongs((current) => ({ ...current, [game]: nextSongs }));
+        const result = await store.searchReferenceSongs(game, '');
+        setSongs((current) => ({ ...current, [game]: result.songs }));
+        setUpdatedAt((current) => ({ ...current, [game]: result.updated_at }));
         setLoaded((current) => ({ ...current, [game]: true }));
       } catch (err) {
         console.error('Could not load LXNS songs', err);
         message.error(t(lang, 'reference_audio_download_failed'));
+      } finally {
+        setLoadingGame(null);
+      }
+    },
+    [lang, message, store],
+  );
+
+  const refreshSongs = useCallback(
+    async (game: ReferenceGame) => {
+      setLoadingGame(game);
+      try {
+        const result = await store.refreshReferenceSongs(game);
+        setSongs((current) => ({ ...current, [game]: result.songs }));
+        setUpdatedAt((current) => ({ ...current, [game]: result.updated_at }));
+        setLoaded((current) => ({ ...current, [game]: true }));
+      } catch (err) {
+        console.error('Could not refresh LXNS songs', err);
+        message.error(t(lang, 'reference_audio_refresh_failed'));
       } finally {
         setLoadingGame(null);
       }
@@ -195,9 +226,25 @@ export function ReferenceAudioPickerModal({ open, onClose }: Props): JSX.Element
     [activeGame, downloadingKey, lang, store.busy, useSong],
   );
 
+  const lastUpdated = updatedAt[activeGame];
+  const lastUpdatedText = lastUpdated
+    ? t(lang, 'reference_audio_last_updated', { time: formatUpdatedAt(lang, lastUpdated) })
+    : t(lang, 'reference_audio_refresh');
+
   const title = (
     <Space size={8}>
       <span>{t(lang, 'reference_audio_library')}</span>
+      <Tooltip title={lastUpdatedText}>
+        <Button
+          type="text"
+          shape="circle"
+          size="small"
+          aria-label={t(lang, 'reference_audio_refresh')}
+          loading={loadingGame === activeGame}
+          onClick={() => void refreshSongs(activeGame)}
+          icon={<ReloadOutlined />}
+        />
+      </Tooltip>
       <Tooltip title={t(lang, 'reference_audio_library_tip')}>
         <InfoCircleOutlined />
       </Tooltip>

@@ -119,7 +119,13 @@ export interface StoreValue extends State {
   clearVideos: () => Promise<void>;
   pickReference: () => Promise<void>;
   pickOutputDir: () => Promise<void>;
-  searchReferenceSongs: (game: ReferenceGame, query: string) => Promise<ReferenceSong[]>;
+  searchReferenceSongs: (
+    game: ReferenceGame,
+    query: string,
+  ) => Promise<{ songs: ReferenceSong[]; updated_at: string | null }>;
+  refreshReferenceSongs: (
+    game: ReferenceGame,
+  ) => Promise<{ songs: ReferenceSong[]; updated_at: string }>;
   downloadReferenceAudio: (
     game: ReferenceGame,
     assetSongId: string,
@@ -271,8 +277,21 @@ export function StoreProvider({ children }: { children: ReactNode }): JSX.Elemen
   const searchReferenceSongs = useCallback(
     async (game: ReferenceGame, query: string) => {
       const api = apiRef.current;
-      if (!api) return [];
+      if (!api) return { songs: [], updated_at: null };
       return api.search_reference_songs(game, query);
+    },
+    [],
+  );
+
+  const refreshReferenceSongs = useCallback(
+    async (game: ReferenceGame) => {
+      const api = apiRef.current;
+      if (!api) throw new Error('API not ready');
+      const result = await api.refresh_reference_songs(game);
+      if (!result.ok || !result.songs || !result.updated_at) {
+        throw new Error(result.error || 'refresh failed');
+      }
+      return { songs: result.songs, updated_at: result.updated_at };
     },
     [],
   );
@@ -384,6 +403,7 @@ export function StoreProvider({ children }: { children: ReactNode }): JSX.Elemen
       pickReference,
       pickOutputDir,
       searchReferenceSongs,
+      refreshReferenceSongs,
       downloadReferenceAudio,
       setReference,
       setNudge,
@@ -405,6 +425,7 @@ export function StoreProvider({ children }: { children: ReactNode }): JSX.Elemen
       pickReference,
       pickOutputDir,
       searchReferenceSongs,
+      refreshReferenceSongs,
       downloadReferenceAudio,
       setReference,
       setNudge,

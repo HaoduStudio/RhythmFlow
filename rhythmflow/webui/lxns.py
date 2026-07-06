@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
@@ -13,10 +15,14 @@ from rhythmflow import __version__
 from rhythmflow.config import APP_NAME
 from rhythmflow.webui import settings as settings_module
 
+logger = logging.getLogger(__name__)
+
 JsonFetcher = Callable[[str], Any]
 Downloader = Callable[[str, Path], None]
 
 _MIN_AUDIO_BYTES = 4096
+_SONG_CACHE_TTL_SECONDS = 24 * 60 * 60
+_SONG_CACHE_DIR_NAME = "lxns_song_cache"
 
 
 class LxnsError(RuntimeError):
@@ -71,15 +77,27 @@ class LxnsReferenceAudioService:
     ) -> None:
         self._fetch_json = fetch_json or _fetch_json
         self._download_file = download_file or _download_file
-        self._song_cache: dict[str, list[dict[str, Any]]] = {}
+        self._song_cache: dict[str, tuple[list[dict[str, Any]], str]] = {}
 
     def search_songs(self, game: str, query: str = "") -> list[dict[str, Any]]:
         normalized_game = _normalize_game(game)
-        songs = self._songs(normalized_game)
+        songs, _ = self._load_songs(normalized_game)
         needle = _normalize_query(query)
         if not needle:
             return songs
         return [song for song in songs if needle in song["search_text"]][:100]
+
+    def get_cache_updated_at(self, game: str) -> str | None:
+        normalized_game = _normalize_game(game)
+        cached = self._song_cache.get(normalized_game)
+        if cached is not None:
+            return cached[1]
+        return _read_disk_cache_updated_at(normalized_game)
+
+    def refresh_songs(self, game: str) -> dict[str, Any]:
+        normalized_game = _normalize_game(game)
+        songs, updated_at = self._load_songs(normalized_game, force_refresh=True)
+        return {"songs": songs, "updated_at": updated_at}
 
     def download_audio(
         self,
@@ -123,15 +141,27 @@ class LxnsReferenceAudioService:
                 tmp.unlink(missing_ok=True)
         return str(target)
 
-    def _songs(self, game: str) -> list[dict[str, Any]]:
-        cached = self._song_cache.get(game)
-        if cached is not None:
-            return cached
+    def _load_songs(
+        self,
+        game: str,
+        *,
+        force_refresh: bool = False,
+    ) -> tuple[list[dict[str, Any]], str]:
+        if not force_refresh:
+            cached = self._song_cache.get(game)
+            if cached is not None:
+                return cached
+            disk = _read_disk_cache(game)
+            if disk is not None:
+                self._song_cache[game] = disk
+                return disk
         payload = self._fetch_json(GAMES[game].api_url)
         raw_songs = _extract_songs(payload)
         songs = [_normalize_song(game, raw) for raw in raw_songs]
-        self._song_cache[game] = songs
-        return songs
+        updated_at = _now_iso()
+        _write_disk_cache(game, songs, updated_at)
+        self._song_cache[game] = (songs, updated_at)
+        return songs, updated_at
 
 
 def safe_filename(value: str, fallback: str = "reference_audio") -> str:
@@ -167,6 +197,72 @@ def is_reference_audio_cache_path(path: str | Path) -> bool:
         return source.suffix.lower() == ".mp3" and source.parent == cache_dir
     except OSError:
         return False
+
+
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _is_cache_fresh(updated_at: str) -> bool:
+    try:
+        timestamp = datetime.fromisoformat(updated_at)
+    except (TypeError, ValueError):
+        return False
+    if timestamp.tzinfo is None:
+        timestamp = timestamp.replace(tzinfo=timezone.utc)
+    age = (datetime.now(timezone.utc) - timestamp).total_seconds()
+    return age < _SONG_CACHE_TTL_SECONDS
+
+
+def _song_cache_path(game: str) -> Path:
+    return settings_module.config_dir() / _SONG_CACHE_DIR_NAME / f"{game}.json"
+
+
+def _read_disk_cache(game: str) -> tuple[list[dict[str, Any]], str] | None:
+    path = _song_cache_path(game)
+    if not path.is_file():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        logger.warning("Could not read LXNS song cache at %s", path, exc_info=True)
+        return None
+    if not isinstance(data, dict):
+        return None
+    updated_at = str(data.get("updated_at") or "")
+    raw_songs = data.get("songs")
+    if not updated_at or not isinstance(raw_songs, list):
+        return None
+    if not _is_cache_fresh(updated_at):
+        return None
+    songs = [song for song in raw_songs if isinstance(song, dict)]
+    return songs, updated_at
+
+
+def _read_disk_cache_updated_at(game: str) -> str | None:
+    path = _song_cache_path(game)
+    if not path.is_file():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    updated_at = str(data.get("updated_at") or "")
+    return updated_at or None
+
+
+def _write_disk_cache(game: str, songs: list[dict[str, Any]], updated_at: str) -> None:
+    path = _song_cache_path(game)
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps({"updated_at": updated_at, "songs": songs}, ensure_ascii=False),
+            encoding="utf-8",
+        )
+    except OSError:
+        logger.warning("Could not write LXNS song cache to %s", path, exc_info=True)
 
 
 def _normalize_game(game: str) -> str:

@@ -110,24 +110,54 @@ class Api:
         result = self._open_dialog(allow_multiple=False, file_types=_AUDIO_FILE_TYPES)
         return result[0] if result else None
 
-    def search_reference_songs(self, game: str, query: str = "") -> list[dict[str, Any]]:
+    def search_reference_songs(self, game: str, query: str = "") -> dict[str, Any]:
         songs = self.lxns.search_songs(game, query)
-        return [
-            {
-                key: song[key]
-                for key in (
-                    "id",
-                    "title",
-                    "artist",
-                    "version",
-                    "genre",
-                    "difficulty_summary",
-                    "difficulties",
-                    "asset_song_id",
-                )
-            }
-            for song in songs
-        ]
+        updated_at = self.lxns.get_cache_updated_at(game)
+        return {
+            "songs": [
+                {
+                    key: song[key]
+                    for key in (
+                        "id",
+                        "title",
+                        "artist",
+                        "version",
+                        "genre",
+                        "difficulty_summary",
+                        "difficulties",
+                        "asset_song_id",
+                    )
+                }
+                for song in songs
+            ],
+            "updated_at": updated_at,
+        }
+
+    def refresh_reference_songs(self, game: str) -> dict[str, Any]:
+        try:
+            refreshed = self.lxns.refresh_songs(game)
+        except LxnsError as exc:
+            logger.warning("Could not refresh LXNS song list: %s", exc)
+            return {"ok": False, "error": str(exc)}
+        return {
+            "songs": [
+                {
+                    key: song[key]
+                    for key in (
+                        "id",
+                        "title",
+                        "artist",
+                        "version",
+                        "genre",
+                        "difficulty_summary",
+                        "difficulties",
+                        "asset_song_id",
+                    )
+                }
+                for song in refreshed["songs"]
+            ],
+            "updated_at": refreshed["updated_at"],
+        }
 
     def download_reference_audio(
         self,

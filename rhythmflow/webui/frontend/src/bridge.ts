@@ -22,7 +22,13 @@ export interface RhythmApi {
   register_media(path: string): Promise<string>;
   pick_videos(): Promise<string[]>;
   pick_reference(): Promise<string | null>;
-  search_reference_songs(game: ReferenceGame, query: string): Promise<ReferenceSong[]>;
+  search_reference_songs(
+    game: ReferenceGame,
+    query: string,
+  ): Promise<{ songs: ReferenceSong[]; updated_at: string | null }>;
+  refresh_reference_songs(
+    game: ReferenceGame,
+  ): Promise<{ ok: boolean; songs?: ReferenceSong[]; updated_at?: string; error?: string }>;
   download_reference_audio(
     game: ReferenceGame,
     assetSongId: string,
@@ -263,13 +269,50 @@ function createMockApi(emit: (m: { event: string; payload: unknown }) => void): 
               },
             ];
       const needle = query.trim().toLowerCase();
-      if (!needle) return songs;
-      return songs.filter((song) =>
-        [song.id, song.title, song.artist, song.version, song.genre, song.difficulty_summary]
-          .join(' ')
-          .toLowerCase()
-          .includes(needle),
-      );
+      const filtered = !needle
+        ? songs
+        : songs.filter((song) =>
+            [song.id, song.title, song.artist, song.version, song.genre, song.difficulty_summary]
+              .join(' ')
+              .toLowerCase()
+              .includes(needle),
+          );
+      return { songs: filtered, updated_at: new Date().toISOString() };
+    },
+    async refresh_reference_songs(game) {
+      const base: ReferenceSong[] =
+        game === 'maimai'
+          ? [
+              {
+                id: '1001',
+                title: 'Stellar Parade',
+                artist: 'Sample Artist',
+                version: 'BUDDiES',
+                genre: 'POPS',
+                difficulty_summary: 'MASTER 13 / Re:MASTER 14',
+                difficulties: [
+                  { label: 'MASTER', level: '13', index: 3 },
+                  { label: 'Re:MASTER', level: '14', index: 4 },
+                ],
+                asset_song_id: '1001',
+              },
+            ]
+          : [
+              {
+                id: '3002',
+                title: 'Luminous Rail',
+                artist: 'Sample Artist',
+                version: 'VERSE',
+                genre: 'ORIGINAL',
+                difficulty_summary: 'MASTER 13',
+                difficulties: [
+                  { label: 'MASTER', level: '13', index: 3 },
+                  { label: 'ULTIMA', level: '14+', index: 4 },
+                ],
+                asset_song_id: '3002',
+              },
+            ];
+      return { ok: true, songs: base, updated_at: new Date().toISOString() };
     },
     async download_reference_audio(game, assetSongId, title, persist) {
       const root = persist ? settings.output_dir : 'E:/Code/RhythmFlow/cache';
