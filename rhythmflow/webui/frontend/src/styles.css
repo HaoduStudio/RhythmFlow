@@ -9,6 +9,9 @@
   --app-text-soft: #cbd5e1;
   --app-log-bg: #0b1424;
   --app-log-border: #1e293b;
+  --app-border-beam-start: #5eead4;
+  --app-border-beam-mid: #38bdf8;
+  --app-border-beam-end: #a78bfa;
   --app-row-error: rgba(127, 29, 29, 0.35);
   --app-row-review: rgba(120, 53, 15, 0.4);
   --app-row-ok: rgba(20, 83, 45, 0.28);
@@ -26,6 +29,9 @@
   --app-text-soft: #334155;
   --app-log-bg: #ffffff;
   --app-log-border: #dbe3ef;
+  --app-border-beam-start: #0f766e;
+  --app-border-beam-mid: #1677ff;
+  --app-border-beam-end: #7c3aed;
   --app-row-error: rgba(254, 226, 226, 0.9);
   --app-row-review: rgba(254, 243, 199, 0.95);
   --app-row-ok: rgba(220, 252, 231, 0.9);
@@ -168,6 +174,62 @@ body {
   text-align: right;
   color: var(--app-text-soft);
   font-variant-numeric: tabular-nums;
+}
+
+.progress-log-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-log-card > .ant-card-head,
+.progress-log-card > .ant-card-body {
+  position: relative;
+  z-index: 1;
+}
+
+@property --progress-log-beam-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.progress-log-card-running::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  padding: 1px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--progress-log-beam-angle),
+    transparent 0deg 235deg,
+    var(--app-border-beam-start) 265deg,
+    var(--app-border-beam-mid) 300deg,
+    var(--app-border-beam-end) 335deg,
+    transparent 360deg
+  );
+  pointer-events: none;
+  animation: progress-log-border-beam 3.6s linear infinite;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+@keyframes progress-log-border-beam {
+  to {
+    --progress-log-beam-angle: 360deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress-log-card-running::before {
+    display: none;
+  }
 }
 
 .log-panel {

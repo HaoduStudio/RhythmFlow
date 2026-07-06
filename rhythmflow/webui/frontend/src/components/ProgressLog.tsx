@@ -7,6 +7,7 @@ export function ProgressLog(): JSX.Element {
   const store = useStore();
   const lang = store.language;
   const logRef = useRef<HTMLDivElement>(null);
+  const cardClassName = `progress-log-card${store.busy ? " progress-log-card-running" : ""}`;
 
   useEffect(() => {
     const el = logRef.current;
@@ -14,7 +15,7 @@ export function ProgressLog(): JSX.Element {
   }, [store.log]);
 
   return (
-    <Card title={t(lang, "progress")} size="small">
+    <Card className={cardClassName} title={t(lang, "progress")} size="small">
       <Progress percent={store.progress} status={store.busy ? "active" : "normal"} />
       <div className="log-panel" ref={logRef} style={{ marginTop: 10 }}>
         {store.log.length === 0 ? (
