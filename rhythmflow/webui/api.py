@@ -4,6 +4,7 @@ import base64
 import binascii
 from dataclasses import dataclass
 import logging
+import os
 from pathlib import Path, PureWindowsPath
 import re
 import threading
@@ -25,6 +26,8 @@ from rhythmflow.webui.lxns import (
 from rhythmflow.webui.media_server import MediaServer
 from rhythmflow.webui.settings import load_settings, save_settings
 from rhythmflow.webui.state import AppState, JobBuildError
+from rhythmflow.webui import updater
+from rhythmflow.webui.updater import UpdateError
 from rhythmflow.webui.waveform import compute_waveform
 
 logger = logging.getLogger(__name__)
@@ -50,6 +53,8 @@ class Api:
         self._window: Any | None = None
         self._thread: threading.Thread | None = None
         self._busy = False
+        self._update_thread: threading.Thread | None = None
+        self._update_busy = False
         self._osu_exports: dict[str, _OsuExportSession] = {}
 
     def set_window(self, window: Any) -> None:
@@ -76,6 +81,21 @@ class Api:
 
     def open_repository(self) -> None:
         webbrowser.open(REPOSITORY_URL)
+
+    def check_for_updates(self) -> dict[str, Any]:
+        if self._busy:
+            return {"ok": False, "error": "busy_hint"}
+        if self._update_busy:
+            return {"ok": False, "error": "update_busy"}
+
+        self._update_busy = True
+        self._update_thread = threading.Thread(
+            target=self._run_update_check,
+            name="rhythmflow-update",
+            daemon=True,
+        )
+        self._update_thread.start()
+        return {"ok": True}
 
     def get_media_base(self) -> str:
         return self.media_server.base_url
@@ -317,6 +337,64 @@ class Api:
     def _set_busy(self, busy: bool) -> None:
         self._busy = busy
         self.emitter.emit("busy", busy)
+
+    def _run_update_check(self) -> None:
+        restart_pending = False
+        try:
+            self._emit_update_status(
+                "checking",
+                current_version=updater.current_release_name(__version__),
+            )
+            plan = updater.build_update_plan(__version__)
+            payload = {
+                "current_version": plan.current_name,
+                "latest_version": plan.latest_name,
+                "release_url": plan.release_url,
+            }
+            if not plan.update_available:
+                self._emit_update_status("up_to_date", **payload)
+                return
+
+            asset_name = plan.asset.name if plan.asset is not None else ""
+            self._emit_update_status("downloading", **payload, asset_name=asset_name)
+            package = updater.download_update_package(
+                plan,
+                progress_callback=lambda progress: self._emit_update_status(
+                    "downloading",
+                    **payload,
+                    asset_name=asset_name,
+                    **progress,
+                ),
+            )
+            self._emit_update_status("installing", **payload, asset_name=package.asset_name)
+            updater.schedule_update_install(package)
+            restart_pending = True
+            self._emit_update_status("restart_pending", **payload, asset_name=package.asset_name)
+            self._close_window_soon()
+        except UpdateError as exc:
+            logger.warning("Update check failed: %s", exc, exc_info=True)
+            self._emit_update_status("error", error_key=exc.key, error=exc.message)
+        except Exception as exc:  # noqa: BLE001 - surface updater failures to the UI
+            logger.exception("Update check failed unexpectedly")
+            self._emit_update_status("error", error_key="update_failed", error=str(exc))
+        finally:
+            if not restart_pending:
+                self._update_busy = False
+
+    def _emit_update_status(self, status: str, **payload: Any) -> None:
+        self.emitter.emit("update_status", {"status": status, **payload})
+
+    def _close_window_soon(self) -> None:
+        def close_window() -> None:
+            try:
+                if self._window is not None:
+                    self._window.destroy()
+                else:
+                    os._exit(0)
+            except Exception:
+                logger.warning("Could not close the window for update restart", exc_info=True)
+
+        threading.Timer(1.0, close_window).start()
 
 
 def _dialog_kinds() -> tuple[Any, Any]:

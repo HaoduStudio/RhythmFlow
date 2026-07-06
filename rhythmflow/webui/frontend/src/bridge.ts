@@ -8,6 +8,7 @@ import type {
   ReviewSegment,
   RowState,
   Settings,
+  UpdateStartResult,
   WaveformData,
 } from './types';
 
@@ -16,6 +17,7 @@ export interface RhythmApi {
   save_settings(values: Partial<Settings>): Promise<Settings>;
   about_info(): Promise<AboutInfo>;
   open_repository(): Promise<void>;
+  check_for_updates(): Promise<UpdateStartResult>;
   get_media_base(): Promise<string>;
   register_media(path: string): Promise<string>;
   pick_videos(): Promise<string[]>;
@@ -176,6 +178,19 @@ function createMockApi(emit: (m: { event: string; payload: unknown }) => void): 
       };
     },
     async open_repository() {},
+    async check_for_updates() {
+      window.setTimeout(() => {
+        emit({
+          event: 'update_status',
+          payload: {
+            status: 'up_to_date',
+            current_version: 'v0.2.1',
+            latest_version: 'v0.2.1',
+          },
+        });
+      }, 350);
+      return { ok: true };
+    },
     async get_media_base() {
       return '';
     },

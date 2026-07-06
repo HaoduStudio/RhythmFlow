@@ -101,6 +101,12 @@ body {
   margin-top: 4px;
 }
 
+.about-update-status {
+  margin-top: 12px;
+  color: var(--app-text-muted);
+  font-size: 13px;
+}
+
 .app-content {
   padding: 20px 24px;
   display: flex;

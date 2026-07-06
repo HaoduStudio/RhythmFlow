@@ -78,6 +78,31 @@ export interface AboutInfo {
   repository: string;
 }
 
+export type UpdateStatusName =
+  | 'checking'
+  | 'downloading'
+  | 'installing'
+  | 'restart_pending'
+  | 'up_to_date'
+  | 'error';
+
+export interface UpdateStatusPayload {
+  status: UpdateStatusName;
+  current_version?: string;
+  latest_version?: string;
+  release_url?: string;
+  asset_name?: string;
+  downloaded?: number;
+  total?: number;
+  error_key?: string;
+  error?: string;
+}
+
+export interface UpdateStartResult {
+  ok: boolean;
+  error?: string;
+}
+
 export interface ReferenceSong {
   id: string;
   title: string;
