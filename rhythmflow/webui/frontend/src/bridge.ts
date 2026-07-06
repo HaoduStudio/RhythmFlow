@@ -172,7 +172,7 @@ function createMockApi(emit: (m: { event: string; payload: unknown }) => void): 
     async about_info() {
       return {
         app_name: 'RhythmFlow',
-        version: '0.2.1',
+        version: '0.2.2',
         author: 'HaoduStudio',
         repository: 'https://github.com/HaoduStudio/RhythmFlow',
       };
@@ -184,8 +184,8 @@ function createMockApi(emit: (m: { event: string; payload: unknown }) => void): 
           event: 'update_status',
           payload: {
             status: 'up_to_date',
-            current_version: 'v0.2.1',
-            latest_version: 'v0.2.1',
+            current_version: 'v0.2.2',
+            latest_version: 'v0.2.2',
           },
         });
       }, 350);

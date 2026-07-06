@@ -12,24 +12,24 @@ from rhythmflow.webui.updater import UpdateError
 class UpdaterTests(unittest.TestCase):
     def test_release_name_matches_current_version(self) -> None:
         data = {
-            "name": "v0.2.1",
-            "tag_name": "v0.2.1",
-            "html_url": "https://github.com/HaoduStudio/RhythmFlow/releases/tag/v0.2.1",
+            "name": "v0.2.2",
+            "tag_name": "v0.2.2",
+            "html_url": "https://github.com/HaoduStudio/RhythmFlow/releases/tag/v0.2.2",
             "assets": [],
         }
 
-        plan = updater.build_update_plan("0.2.1", platform_key="windows", fetch_json=lambda _url: data)
+        plan = updater.build_update_plan("0.2.2", platform_key="windows", fetch_json=lambda _url: data)
 
         self.assertFalse(plan.update_available)
-        self.assertEqual(plan.current_name, "v0.2.1")
-        self.assertEqual(plan.latest_name, "v0.2.1")
+        self.assertEqual(plan.current_name, "v0.2.2")
+        self.assertEqual(plan.latest_name, "v0.2.2")
         self.assertIsNone(plan.asset)
 
     def test_windows_update_selects_windows_x64_asset(self) -> None:
         data = {
-            "name": "v0.2.2",
-            "tag_name": "v0.2.2",
-            "html_url": "https://github.com/HaoduStudio/RhythmFlow/releases/tag/v0.2.2",
+            "name": "v0.2.3",
+            "tag_name": "v0.2.3",
+            "html_url": "https://github.com/HaoduStudio/RhythmFlow/releases/tag/v0.2.3",
             "assets": [
                 {
                     "name": "RhythmFlow-macos.zip",
@@ -44,7 +44,7 @@ class UpdaterTests(unittest.TestCase):
             ],
         }
 
-        plan = updater.build_update_plan("0.2.1", platform_key="windows", fetch_json=lambda _url: data)
+        plan = updater.build_update_plan("0.2.2", platform_key="windows", fetch_json=lambda _url: data)
 
         self.assertTrue(plan.update_available)
         self.assertIsNotNone(plan.asset)
@@ -52,9 +52,9 @@ class UpdaterTests(unittest.TestCase):
 
     def test_macos_update_selects_macos_asset(self) -> None:
         data = {
-            "name": "v0.2.2",
-            "tag_name": "v0.2.2",
-            "html_url": "https://github.com/HaoduStudio/RhythmFlow/releases/tag/v0.2.2",
+            "name": "v0.2.3",
+            "tag_name": "v0.2.3",
+            "html_url": "https://github.com/HaoduStudio/RhythmFlow/releases/tag/v0.2.3",
             "assets": [
                 {
                     "name": "RhythmFlow-windows-x64.zip",
@@ -69,7 +69,7 @@ class UpdaterTests(unittest.TestCase):
             ],
         }
 
-        plan = updater.build_update_plan("0.2.1", platform_key="macos", fetch_json=lambda _url: data)
+        plan = updater.build_update_plan("0.2.2", platform_key="macos", fetch_json=lambda _url: data)
 
         self.assertTrue(plan.update_available)
         self.assertIsNotNone(plan.asset)
