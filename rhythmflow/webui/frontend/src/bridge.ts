@@ -10,7 +10,7 @@ import type {
   Settings,
   UpdateStartResult,
   WaveformData,
-} from './types';
+} from "./types";
 
 export interface RhythmApi {
   get_settings(): Promise<Settings>;
@@ -36,9 +36,16 @@ export interface RhythmApi {
     persist: boolean,
   ): Promise<{ ok: boolean; path?: string; error?: string }>;
   pick_output_dir(): Promise<string | null>;
-  begin_osu_export(filename: string): Promise<{ ok: boolean; token?: string; output_path?: string; error?: string }>;
-  append_osu_export_chunk(token: string, chunkBase64: string): Promise<{ ok: boolean; bytes?: number; error?: string }>;
-  finish_osu_export(token: string): Promise<{ ok: boolean; output_path?: string; bytes?: number; error?: string }>;
+  begin_osu_export(
+    filename: string,
+  ): Promise<{ ok: boolean; token?: string; output_path?: string; error?: string }>;
+  append_osu_export_chunk(
+    token: string,
+    chunkBase64: string,
+  ): Promise<{ ok: boolean; bytes?: number; error?: string }>;
+  finish_osu_export(
+    token: string,
+  ): Promise<{ ok: boolean; output_path?: string; bytes?: number; error?: string }>;
   abort_osu_export(token: string): Promise<{ ok: boolean; error?: string }>;
   sync_rows(paths: string[], context: AppContext): Promise<RowState[]>;
   set_nudge(row: number, value: number): Promise<RowState | null>;
@@ -61,7 +68,7 @@ function dispatch(message: { event: string; payload: unknown }): void {
       try {
         listener(message.payload);
       } catch (err) {
-        console.error('rhythmflow event listener failed', err);
+        console.error("rhythmflow event listener failed", err);
       }
     }
   }
@@ -88,7 +95,7 @@ let cached: Promise<RhythmApi> | null = null;
 // real method exists — otherwise we capture the empty stub and every call
 // throws "is not a function".
 function apiReady(): boolean {
-  return typeof (window as any).pywebview?.api?.get_settings === 'function';
+  return typeof (window as any).pywebview?.api?.get_settings === "function";
 }
 
 function liveApi(): RhythmApi {
@@ -98,7 +105,7 @@ function liveApi(): RhythmApi {
       get(_target, prop) {
         // Never expose `then` (or symbols) or the promise machinery treats this
         // proxy as a thenable and tries to call window.pywebview.api.then().
-        if (prop === 'then' || typeof prop === 'symbol') return undefined;
+        if (prop === "then" || typeof prop === "symbol") return undefined;
         return (...args: unknown[]) => (window as any).pywebview.api[prop as string](...args);
       },
     },
@@ -120,12 +127,12 @@ export function getApi(): Promise<RhythmApi> {
       } else if (!(window as any).pywebview && Date.now() - start > 1200) {
         // Plain browser (dev / preview) — fall back to the mock bridge.
         window.clearInterval(timer);
-        console.info('pywebview not detected — using mock bridge');
+        console.info("pywebview not detected — using mock bridge");
         resolve(createMockApi(dispatch));
       }
     }, 40);
     window.addEventListener(
-      'pywebviewready',
+      "pywebviewready",
       () => {
         if (apiReady()) {
           window.clearInterval(timer);
@@ -142,12 +149,12 @@ export function getApi(): Promise<RhythmApi> {
 function createMockApi(emit: (m: { event: string; payload: unknown }) => void): RhythmApi {
   let rows: RowState[] = [];
   const settings: Settings = {
-    language: 'zh',
-    output_dir: 'E:/Code/RhythmFlow/output',
-    output_pattern: '{name}_aligned.mp4',
+    language: "zh",
+    output_dir: "E:/Code/RhythmFlow/output",
+    output_pattern: "{name}_aligned.mp4",
     original_volume: 15,
     reference_volume: 100,
-    cut_mode: 'accurate',
+    cut_mode: "accurate",
   };
   const makeRow = (path: string): RowState => ({
     video_path: path,
@@ -177,28 +184,28 @@ function createMockApi(emit: (m: { event: string; payload: unknown }) => void): 
     },
     async about_info() {
       return {
-        app_name: 'RhythmFlow',
-        version: '0.2.2',
-        author: 'HaoduStudio',
-        repository: 'https://github.com/HaoduStudio/RhythmFlow',
+        app_name: "RhythmFlow",
+        version: "0.2.2",
+        author: "HaoduStudio",
+        repository: "https://github.com/HaoduStudio/RhythmFlow",
       };
     },
     async open_repository() {},
     async check_for_updates() {
       window.setTimeout(() => {
         emit({
-          event: 'update_status',
+          event: "update_status",
           payload: {
-            status: 'up_to_date',
-            current_version: 'v0.2.2',
-            latest_version: 'v0.2.2',
+            status: "up_to_date",
+            current_version: "v0.2.2",
+            latest_version: "v0.2.2",
           },
         });
       }, 350);
       return { ok: true };
     },
     async get_media_base() {
-      return '';
+      return "";
     },
     async register_media(path) {
       return path;
@@ -208,64 +215,64 @@ function createMockApi(emit: (m: { event: string; payload: unknown }) => void): 
       return [`E:/samples/handcam_${counter}.mp4`];
     },
     async pick_reference() {
-      return 'E:/samples/reference.wav';
+      return "E:/samples/reference.wav";
     },
     async search_reference_songs(game, query) {
       const songs: ReferenceSong[] =
-        game === 'maimai'
+        game === "maimai"
           ? [
               {
-                id: '1001',
-                title: 'Stellar Parade',
-                artist: 'Sample Artist',
-                version: 'BUDDiES',
-                genre: 'POPS',
-                difficulty_summary: 'MASTER 13 / Re:MASTER 14',
+                id: "1001",
+                title: "Stellar Parade",
+                artist: "Sample Artist",
+                version: "BUDDiES",
+                genre: "POPS",
+                difficulty_summary: "MASTER 13 / Re:MASTER 14",
                 difficulties: [
-                  { label: 'MASTER', level: '13', index: 3 },
-                  { label: 'Re:MASTER', level: '14', index: 4 },
+                  { label: "MASTER", level: "13", index: 3 },
+                  { label: "Re:MASTER", level: "14", index: 4 },
                 ],
-                asset_song_id: '1001',
+                asset_song_id: "1001",
               },
               {
-                id: '1002',
-                title: 'Blue Mirage',
-                artist: 'RhythmFlow',
-                version: 'Festival',
-                genre: 'Game',
-                difficulty_summary: 'EXPERT 11+ / MASTER 13+',
+                id: "1002",
+                title: "Blue Mirage",
+                artist: "RhythmFlow",
+                version: "Festival",
+                genre: "Game",
+                difficulty_summary: "EXPERT 11+ / MASTER 13+",
                 difficulties: [
-                  { label: 'BASIC', level: '4', index: 0 },
-                  { label: 'ADVANCED', level: '8', index: 1 },
-                  { label: 'EXPERT', level: '11+', index: 2 },
-                  { label: 'MASTER', level: '13+', index: 3 },
+                  { label: "BASIC", level: "4", index: 0 },
+                  { label: "ADVANCED", level: "8", index: 1 },
+                  { label: "EXPERT", level: "11+", index: 2 },
+                  { label: "MASTER", level: "13+", index: 3 },
                 ],
-                asset_song_id: '1002',
+                asset_song_id: "1002",
               },
             ]
           : [
               {
-                id: '3001',
+                id: "3001",
                 title: "World's End Song",
-                artist: 'Chuni Artist',
-                version: 'SUN',
-                genre: 'VARIETY',
+                artist: "Chuni Artist",
+                version: "SUN",
+                genre: "VARIETY",
                 difficulty_summary: "WORLD'S END 避",
-                difficulties: [{ label: "WORLD'S END", level: '避', index: 5 }],
-                asset_song_id: '8888',
+                difficulties: [{ label: "WORLD'S END", level: "避", index: 5 }],
+                asset_song_id: "8888",
               },
               {
-                id: '3002',
-                title: 'Luminous Rail',
-                artist: 'Sample Artist',
-                version: 'VERSE',
-                genre: 'ORIGINAL',
-                difficulty_summary: 'MASTER 13',
+                id: "3002",
+                title: "Luminous Rail",
+                artist: "Sample Artist",
+                version: "VERSE",
+                genre: "ORIGINAL",
+                difficulty_summary: "MASTER 13",
                 difficulties: [
-                  { label: 'MASTER', level: '13', index: 3 },
-                  { label: 'ULTIMA', level: '14+', index: 4 },
+                  { label: "MASTER", level: "13", index: 3 },
+                  { label: "ULTIMA", level: "14+", index: 4 },
                 ],
-                asset_song_id: '3002',
+                asset_song_id: "3002",
               },
             ];
       const needle = query.trim().toLowerCase();
@@ -273,7 +280,7 @@ function createMockApi(emit: (m: { event: string; payload: unknown }) => void): 
         ? songs
         : songs.filter((song) =>
             [song.id, song.title, song.artist, song.version, song.genre, song.difficulty_summary]
-              .join(' ')
+              .join(" ")
               .toLowerCase()
               .includes(needle),
           );
@@ -281,46 +288,46 @@ function createMockApi(emit: (m: { event: string; payload: unknown }) => void): 
     },
     async refresh_reference_songs(game) {
       const base: ReferenceSong[] =
-        game === 'maimai'
+        game === "maimai"
           ? [
               {
-                id: '1001',
-                title: 'Stellar Parade',
-                artist: 'Sample Artist',
-                version: 'BUDDiES',
-                genre: 'POPS',
-                difficulty_summary: 'MASTER 13 / Re:MASTER 14',
+                id: "1001",
+                title: "Stellar Parade",
+                artist: "Sample Artist",
+                version: "BUDDiES",
+                genre: "POPS",
+                difficulty_summary: "MASTER 13 / Re:MASTER 14",
                 difficulties: [
-                  { label: 'MASTER', level: '13', index: 3 },
-                  { label: 'Re:MASTER', level: '14', index: 4 },
+                  { label: "MASTER", level: "13", index: 3 },
+                  { label: "Re:MASTER", level: "14", index: 4 },
                 ],
-                asset_song_id: '1001',
+                asset_song_id: "1001",
               },
             ]
           : [
               {
-                id: '3002',
-                title: 'Luminous Rail',
-                artist: 'Sample Artist',
-                version: 'VERSE',
-                genre: 'ORIGINAL',
-                difficulty_summary: 'MASTER 13',
+                id: "3002",
+                title: "Luminous Rail",
+                artist: "Sample Artist",
+                version: "VERSE",
+                genre: "ORIGINAL",
+                difficulty_summary: "MASTER 13",
                 difficulties: [
-                  { label: 'MASTER', level: '13', index: 3 },
-                  { label: 'ULTIMA', level: '14+', index: 4 },
+                  { label: "MASTER", level: "13", index: 3 },
+                  { label: "ULTIMA", level: "14+", index: 4 },
                 ],
-                asset_song_id: '3002',
+                asset_song_id: "3002",
               },
             ];
       return { ok: true, songs: base, updated_at: new Date().toISOString() };
     },
     async download_reference_audio(game, assetSongId, title, persist) {
-      const root = persist ? settings.output_dir : 'E:/Code/RhythmFlow/cache';
-      const safeTitle = title.replace(/[<>:"/\\|?*]/g, '_');
+      const root = persist ? settings.output_dir : "E:/Code/RhythmFlow/cache";
+      const safeTitle = title.replace(/[<>:"/\\|?*]/g, "_");
       return { ok: true, path: `${root}/${game}_${assetSongId}_${safeTitle}.mp3` };
     },
     async pick_output_dir() {
-      return 'E:/Code/RhythmFlow/output';
+      return "E:/Code/RhythmFlow/output";
     },
     async begin_osu_export(filename) {
       counter += 1;
@@ -330,7 +337,7 @@ function createMockApi(emit: (m: { event: string; payload: unknown }) => void): 
     },
     async append_osu_export_chunk(token, chunkBase64) {
       const entry = osuExports.get(token);
-      if (!entry) return { ok: false, error: 'invalid_export_session' };
+      if (!entry) return { ok: false, error: "invalid_export_session" };
       const binary = atob(chunkBase64);
       const bytes = new Uint8Array(binary.length);
       for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
@@ -340,19 +347,23 @@ function createMockApi(emit: (m: { event: string; payload: unknown }) => void): 
     async finish_osu_export(token) {
       const entry = osuExports.get(token);
       osuExports.delete(token);
-      if (!entry) return { ok: false, error: 'invalid_export_session' };
+      if (!entry) return { ok: false, error: "invalid_export_session" };
       // Browser dev cannot write to disk — hand the file over as a download instead.
-      const type = entry.filename.toLowerCase().endsWith('.webm') ? 'video/webm' : 'video/mp4';
+      const type = entry.filename.toLowerCase().endsWith(".webm") ? "video/webm" : "video/mp4";
       const blob = new Blob(entry.chunks, { type });
       const url = URL.createObjectURL(blob);
-      const anchor = document.createElement('a');
+      const anchor = document.createElement("a");
       anchor.href = url;
       anchor.download = entry.filename;
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();
       window.setTimeout(() => URL.revokeObjectURL(url), 4000);
-      return { ok: true, output_path: `${settings.output_dir}/${entry.filename}`, bytes: blob.size };
+      return {
+        ok: true,
+        output_path: `${settings.output_dir}/${entry.filename}`,
+        bytes: blob.size,
+      };
     },
     async abort_osu_export(token) {
       osuExports.delete(token);
@@ -390,12 +401,15 @@ function createMockApi(emit: (m: { event: string; payload: unknown }) => void): 
             review_confirmed: !needsReview,
           };
           rows[index] = row;
-          emit({ event: 'analyze_result', payload: { row: index, row_state: row } });
+          emit({ event: "analyze_result", payload: { row: index, row_state: row } });
         });
-        emit({ event: 'progress', payload: 100 });
+        emit({ event: "progress", payload: 100 });
         emit({
-          event: 'analyze_finished',
-          payload: { rows, review_rows: rows.map((r, i) => (r.needs_review ? i : -1)).filter((i) => i >= 0) },
+          event: "analyze_finished",
+          payload: {
+            rows,
+            review_rows: rows.map((r, i) => (r.needs_review ? i : -1)).filter((i) => i >= 0),
+          },
         });
       }, 400);
       return { ok: true };
@@ -410,12 +424,12 @@ function createMockApi(emit: (m: { event: string; payload: unknown }) => void): 
           is_global: true,
           file_name: rows[row].file_name,
           video_path: rows[row].video_path,
-          reference_path: 'E:/samples/reference.wav',
-          video_url: '',
-          reference_url: '',
-          label_key: 'review_global_label',
+          reference_path: "E:/samples/reference.wav",
+          video_url: "",
+          reference_url: "",
+          label_key: "review_global_label",
           label_params: {},
-          notes: [{ key: 'review_low_confidence_note', params: { confidence: '1.10' } }],
+          notes: [{ key: "review_low_confidence_note", params: { confidence: "1.10" } }],
           reference_start_s: 0,
           reference_end_s: 8,
           video_start_s: 1.234,
@@ -424,7 +438,10 @@ function createMockApi(emit: (m: { event: string; payload: unknown }) => void): 
       };
     },
     async get_waveform() {
-      const envelope = Array.from({ length: 900 }, (_v, i) => Math.abs(Math.sin(i / 12)) * (0.4 + Math.random() * 0.6));
+      const envelope = Array.from(
+        { length: 900 },
+        (_v, i) => Math.abs(Math.sin(i / 12)) * (0.4 + Math.random() * 0.6),
+      );
       return {
         ok: true,
         duration_s: 8,
@@ -439,8 +456,8 @@ function createMockApi(emit: (m: { event: string; payload: unknown }) => void): 
     },
     async process() {
       window.setTimeout(() => {
-        emit({ event: 'progress', payload: 100 });
-        emit({ event: 'process_finished', payload: { rows } });
+        emit({ event: "progress", payload: 100 });
+        emit({ event: "process_finished", payload: { rows } });
       }, 400);
       return { ok: true };
     },

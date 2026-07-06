@@ -1,6 +1,6 @@
-import { strFromU8, unzipSync } from 'fflate';
-import { BeatmapDecoder, HoldableObject, ScoreDecoder } from 'osu-parsers';
-import type { Beatmap, LegacyReplayFrame } from 'osu-classes';
+import { strFromU8, unzipSync } from "fflate";
+import { BeatmapDecoder, HoldableObject, ScoreDecoder } from "osu-parsers";
+import type { Beatmap, LegacyReplayFrame } from "osu-classes";
 import type {
   ManiaChart,
   ManiaNote,
@@ -9,7 +9,7 @@ import type {
   PressInterval,
   ReplayData,
   ReplayStats,
-} from './types';
+} from "./types";
 
 const MANIA_MODE = 3;
 
@@ -33,7 +33,7 @@ export async function loadOsz(file: File): Promise<OszContent> {
   const difficulties: OszDifficulty[] = [];
 
   for (const [name, data] of Object.entries(files)) {
-    if (!name.toLowerCase().endsWith('.osu')) continue;
+    if (!name.toLowerCase().endsWith(".osu")) continue;
     const osuText = strFromU8(data);
     let beatmap: Beatmap;
     try {
@@ -100,26 +100,26 @@ export function findFile(content: OszContent, name: string | null): Uint8Array |
 }
 
 const MOD_FLAGS: Array<[number, string]> = [
-  [2, 'EZ'],
-  [8, 'HD'],
-  [16, 'HR'],
-  [64, 'DT'],
-  [256, 'HT'],
-  [512, 'NC'],
-  [1024, 'FL'],
-  [4096, 'FI'],
-  [1 << 20, 'MR'],
+  [2, "EZ"],
+  [8, "HD"],
+  [16, "HR"],
+  [64, "DT"],
+  [256, "HT"],
+  [512, "NC"],
+  [1024, "FL"],
+  [4096, "FI"],
+  [1 << 20, "MR"],
 ];
 
 function decodeMods(rawMods: number): string[] {
   const mods = MOD_FLAGS.filter(([flag]) => (rawMods & flag) !== 0).map(([, name]) => name);
-  if (mods.includes('NC')) return mods.filter((m) => m !== 'DT');
+  if (mods.includes("NC")) return mods.filter((m) => m !== "DT");
   return mods;
 }
 
 function rateFromMods(mods: string[]): number {
-  if (mods.includes('DT') || mods.includes('NC')) return 1.5;
-  if (mods.includes('HT')) return 0.75;
+  if (mods.includes("DT") || mods.includes("NC")) return 1.5;
+  if (mods.includes("HT")) return 0.75;
   return 1;
 }
 
@@ -134,7 +134,7 @@ export async function parseReplay(file: File, keyCount: number): Promise<ReplayD
     .sort((a, b) => a.startTime - b.startTime);
 
   const pressIntervals: PressInterval[][] = Array.from({ length: keyCount }, () => []);
-  const openStart: Array<number | null> = new Array(keyCount).fill(null);
+  const openStart: Array<number | null> = Array.from({ length: keyCount }, () => null);
   let prevMask = 0;
   let lastTime = 0;
 
@@ -154,12 +154,13 @@ export async function parseReplay(file: File, keyCount: number): Promise<ReplayD
     lastTime = frame.startTime;
   }
   for (let c = 0; c < keyCount; c += 1) {
-    if (openStart[c] !== null) pressIntervals[c].push({ start: openStart[c] as number, end: lastTime });
+    if (openStart[c] !== null)
+      pressIntervals[c].push({ start: openStart[c] as number, end: lastTime });
   }
 
   const mods = decodeMods((info as { rawMods?: number }).rawMods ?? 0);
   const stats: ReplayStats = {
-    playerName: (info as { username?: string }).username ?? '',
+    playerName: (info as { username?: string }).username ?? "",
     count320: info.countGeki,
     count300: info.count300,
     count200: info.countKatu,

@@ -1,11 +1,11 @@
-import { App as AntApp, ConfigProvider } from 'antd';
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
-import { StoreProvider } from './store';
-import { getAppTheme } from './theme';
-import { ThemeModeProvider, useThemeMode } from './themeMode';
-import './styles.css';
+import { App as AntApp, ConfigProvider } from "antd";
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+import { StoreProvider } from "./store";
+import { getAppTheme } from "./theme";
+import { ThemeModeProvider, useThemeMode } from "./themeMode";
+import "./styles.css";
 
 function ThemedRoot(): JSX.Element {
   const { mode } = useThemeMode();
@@ -21,7 +21,7 @@ function ThemedRoot(): JSX.Element {
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <ThemeModeProvider>
       <ThemedRoot />

@@ -1,4 +1,4 @@
-export type Judgement = 'max' | 'perfect' | 'great' | 'good' | 'bad' | 'miss';
+export type Judgement = "max" | "perfect" | "great" | "good" | "bad" | "miss";
 
 export interface ManiaNote {
   column: number;
@@ -92,7 +92,7 @@ export interface ExportConfig {
   width: number;
   height: number;
   fps: number;
-  container: 'mp4' | 'webm';
+  container: "mp4" | "webm";
 }
 
 export interface OszDifficulty {

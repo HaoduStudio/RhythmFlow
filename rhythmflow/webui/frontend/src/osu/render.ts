@@ -1,27 +1,34 @@
-import { sampleSim } from './judge';
-import type { Judgement, ManiaNote, NoteHit, PressInterval, RenderOptions, RenderScene } from './types';
+import { sampleSim } from "./judge";
+import type {
+  Judgement,
+  ManiaNote,
+  NoteHit,
+  PressInterval,
+  RenderOptions,
+  RenderScene,
+} from "./types";
 
 type Ctx2D = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
 const JUDGEMENT_TEXT: Record<Judgement, string> = {
-  max: '300',
-  perfect: '300',
-  great: '200',
-  good: '100',
-  bad: '50',
-  miss: 'MISS',
+  max: "300",
+  perfect: "300",
+  great: "200",
+  good: "100",
+  bad: "50",
+  miss: "MISS",
 };
 
 const JUDGEMENT_COLOR: Record<Judgement, string> = {
-  max: '#b9f2ff',
-  perfect: '#ffd94a',
-  great: '#4ade80',
-  good: '#60a5fa',
-  bad: '#cbd5e1',
-  miss: '#f87171',
+  max: "#b9f2ff",
+  perfect: "#ffd94a",
+  great: "#4ade80",
+  good: "#60a5fa",
+  bad: "#cbd5e1",
+  miss: "#f87171",
 };
 
-const MAX_RAINBOW = ['#ff6b6b', '#ffb54a', '#ffe66d', '#6ee77a', '#5ad0f0', '#b78bff'];
+const MAX_RAINBOW = ["#ff6b6b", "#ffb54a", "#ffe66d", "#6ee77a", "#5ad0f0", "#b78bff"];
 
 interface Layout {
   fieldLeft: number;
@@ -32,7 +39,12 @@ interface Layout {
   pxPerMs: number;
 }
 
-function computeLayout(width: number, height: number, keyCount: number, scrollSpeed: number): Layout {
+function computeLayout(
+  width: number,
+  height: number,
+  keyCount: number,
+  scrollSpeed: number,
+): Layout {
   const colWidth = clamp(
     Math.min(Math.floor((width * 0.9) / keyCount), Math.floor(height * 0.11)),
     24,
@@ -54,8 +66,8 @@ function clamp(value: number, lo: number, hi: number): number {
 }
 
 function noteColor(column: number, keyCount: number): string {
-  if (keyCount % 2 === 1 && column === (keyCount - 1) / 2) return '#facc15';
-  return column % 2 === 0 ? '#e2e8f0' : '#57b6f5';
+  if (keyCount % 2 === 1 && column === (keyCount - 1) / 2) return "#facc15";
+  return column % 2 === 0 ? "#e2e8f0" : "#57b6f5";
 }
 
 function roundRect(ctx: Ctx2D, x: number, y: number, w: number, h: number, r: number): void {
@@ -103,7 +115,7 @@ export function drawScene(
   const { chart, replay, background } = scene;
   const layout = computeLayout(width, height, chart.keyCount, options.scrollSpeed);
 
-  ctx.fillStyle = '#05070d';
+  ctx.fillStyle = "#05070d";
   ctx.fillRect(0, 0, width, height);
   if (background) drawBackground(ctx, width, height, background);
 
@@ -125,9 +137,9 @@ function drawBackground(ctx: Ctx2D, width: number, height: number, image: ImageB
 }
 
 function drawField(ctx: Ctx2D, height: number, layout: Layout, keyCount: number): void {
-  ctx.fillStyle = 'rgba(6, 10, 20, 0.72)';
+  ctx.fillStyle = "rgba(6, 10, 20, 0.72)";
   ctx.fillRect(layout.fieldLeft, 0, layout.fieldWidth, height);
-  ctx.strokeStyle = 'rgba(148, 163, 184, 0.18)';
+  ctx.strokeStyle = "rgba(148, 163, 184, 0.18)";
   ctx.lineWidth = 1;
   for (let c = 0; c <= keyCount; c += 1) {
     const x = layout.fieldLeft + c * layout.colWidth + 0.5;
@@ -149,8 +161,8 @@ function drawColumnLights(
     if (!pressedAt(pressIntervals[c] ?? [], timeMs)) continue;
     const x = layout.fieldLeft + c * layout.colWidth;
     const gradient = ctx.createLinearGradient(0, 0, 0, layout.receptorY);
-    gradient.addColorStop(0, 'rgba(94, 234, 212, 0)');
-    gradient.addColorStop(1, 'rgba(94, 234, 212, 0.28)');
+    gradient.addColorStop(0, "rgba(94, 234, 212, 0)");
+    gradient.addColorStop(1, "rgba(94, 234, 212, 0.28)");
     ctx.fillStyle = gradient;
     ctx.fillRect(x, 0, layout.colWidth, layout.receptorY);
   }
@@ -177,7 +189,11 @@ function drawNotes(
     const w = layout.colWidth - pad * 2;
 
     let i = lowerBoundStart(notes, lowerTime);
-    while (i > 0 && notes[i - 1].endTime !== null && (notes[i - 1].endTime as number) >= lowerTime) {
+    while (
+      i > 0 &&
+      notes[i - 1].endTime !== null &&
+      (notes[i - 1].endTime as number) >= lowerTime
+    ) {
       i -= 1;
     }
     for (; i < notes.length; i += 1) {
@@ -185,10 +201,10 @@ function drawNotes(
       if (note.startTime > timeMs + futureMs) break;
       // Without a replay, behave like autoplay: consume every note on time.
       const hit: NoteHit | null = sim
-        ? sim.hitByColumn[c]?.[i] ?? null
-        : { time: note.startTime, judgement: 'max' };
-      const consumed = hit !== null && hit.judgement !== 'miss' && timeMs >= hit.time;
-      const missed = hit !== null && hit.judgement === 'miss' && timeMs >= hit.time;
+        ? (sim.hitByColumn[c]?.[i] ?? null)
+        : { time: note.startTime, judgement: "max" };
+      const consumed = hit !== null && hit.judgement !== "miss" && timeMs >= hit.time;
+      const missed = hit !== null && hit.judgement === "miss" && timeMs >= hit.time;
 
       let headY = layout.receptorY - (note.startTime - timeMs) * layout.pxPerMs;
       if (note.endTime !== null) {
@@ -219,11 +235,18 @@ function drawNotes(
 
 function drawReceptor(ctx: Ctx2D, layout: Layout, keyCount: number): void {
   const pad = Math.max(2, Math.round(layout.colWidth * 0.08));
-  ctx.strokeStyle = 'rgba(148, 163, 184, 0.5)';
+  ctx.strokeStyle = "rgba(148, 163, 184, 0.5)";
   ctx.lineWidth = 2;
   for (let c = 0; c < keyCount; c += 1) {
     const x = layout.fieldLeft + c * layout.colWidth + pad;
-    roundRect(ctx, x, layout.receptorY - layout.noteH * 0.7, layout.colWidth - pad * 2, layout.noteH * 1.4, 6);
+    roundRect(
+      ctx,
+      x,
+      layout.receptorY - layout.noteH * 0.7,
+      layout.colWidth - pad * 2,
+      layout.noteH * 1.4,
+      6,
+    );
     ctx.stroke();
   }
 }
@@ -237,38 +260,38 @@ function drawHud(
   layout: Layout,
 ): void {
   const scale = height / 720;
-  ctx.textBaseline = 'alphabetic';
+  ctx.textBaseline = "alphabetic";
 
-  ctx.fillStyle = '#e2e8f0';
-  ctx.textAlign = 'left';
+  ctx.fillStyle = "#e2e8f0";
+  ctx.textAlign = "left";
   ctx.font = `${Math.round(22 * scale)}px system-ui, sans-serif`;
   ctx.fillText(scene.chart.title, 20 * scale, 34 * scale);
-  ctx.fillStyle = '#94a3b8';
+  ctx.fillStyle = "#94a3b8";
   ctx.font = `${Math.round(14 * scale)}px system-ui, sans-serif`;
   const subtitle = [scene.chart.artist, `[${scene.chart.version}]`, `${scene.chart.keyCount}K`]
     .filter(Boolean)
-    .join('  ·  ');
+    .join("  ·  ");
   ctx.fillText(subtitle, 20 * scale, 54 * scale);
 
   const sample = scene.sim ? sampleSim(scene.sim, timeMs) : null;
   if (scene.replay) {
-    ctx.textAlign = 'right';
-    ctx.fillStyle = '#f8fafc';
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#f8fafc";
     ctx.font = `${Math.round(30 * scale)}px system-ui, sans-serif`;
-    ctx.fillText(String(sample?.score ?? 0).padStart(8, '0'), width - 20 * scale, 40 * scale);
-    ctx.fillStyle = '#5eead4';
+    ctx.fillText(String(sample?.score ?? 0).padStart(8, "0"), width - 20 * scale, 40 * scale);
+    ctx.fillStyle = "#5eead4";
     ctx.font = `${Math.round(20 * scale)}px system-ui, sans-serif`;
     ctx.fillText(`${((sample?.accuracy ?? 1) * 100).toFixed(2)}%`, width - 20 * scale, 66 * scale);
     if (scene.replay.stats.playerName) {
-      ctx.fillStyle = '#94a3b8';
+      ctx.fillStyle = "#94a3b8";
       ctx.font = `${Math.round(13 * scale)}px system-ui, sans-serif`;
       ctx.fillText(scene.replay.stats.playerName, width - 20 * scale, 86 * scale);
     }
   }
 
   if (sample && sample.combo > 0) {
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#f8fafc';
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#f8fafc";
     ctx.font = `${Math.round(46 * scale)}px system-ui, sans-serif`;
     ctx.fillText(String(sample.combo), layout.fieldLeft + layout.fieldWidth / 2, height * 0.42);
   }
@@ -276,12 +299,14 @@ function drawHud(
   if (sample && sample.judgement && sample.judgementAge >= 0 && sample.judgementAge < 400) {
     const alpha = 1 - sample.judgementAge / 400;
     const centerX = layout.fieldLeft + layout.fieldWidth / 2;
-    ctx.textAlign = 'center';
+    ctx.textAlign = "center";
     ctx.globalAlpha = alpha;
-    if (sample.judgement === 'max') {
+    if (sample.judgement === "max") {
       const half = 52 * scale;
       const gradient = ctx.createLinearGradient(centerX - half, 0, centerX + half, 0);
-      MAX_RAINBOW.forEach((color, idx) => gradient.addColorStop(idx / (MAX_RAINBOW.length - 1), color));
+      MAX_RAINBOW.forEach((color, idx) =>
+        gradient.addColorStop(idx / (MAX_RAINBOW.length - 1), color),
+      );
       ctx.fillStyle = gradient;
     } else {
       ctx.fillStyle = JUDGEMENT_COLOR[sample.judgement];
@@ -294,11 +319,11 @@ function drawHud(
     );
     ctx.globalAlpha = 1;
   }
-  ctx.textAlign = 'left';
+  ctx.textAlign = "left";
 }
 
 function withAlpha(hex: string, alpha: number): string {
-  const value = hex.replace('#', '');
+  const value = hex.replace("#", "");
   const r = parseInt(value.slice(0, 2), 16);
   const g = parseInt(value.slice(2, 4), 16);
   const b = parseInt(value.slice(4, 6), 16);

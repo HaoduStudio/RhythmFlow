@@ -15,7 +15,7 @@
   --app-waveform-bg: #0f172a;
 }
 
-:root[data-theme='light'] {
+:root[data-theme="light"] {
   color-scheme: light;
   --app-bg: #f8fafc;
   --app-header-bg: #ffffff;
@@ -45,7 +45,7 @@ body,
 
 body {
   background: var(--app-bg);
-  font-family: 'Microsoft YaHei UI', 'Microsoft YaHei', 'Segoe UI', system-ui, sans-serif;
+  font-family: "Microsoft YaHei UI", "Microsoft YaHei", "Segoe UI", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -139,6 +139,20 @@ body {
   white-space: nowrap;
 }
 
+.path-row {
+  flex-wrap: nowrap;
+}
+
+.path-row .ant-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto;
+}
+
+.path-row .ant-btn {
+  flex: 0 0 auto;
+}
+
 .slider-row {
   display: flex;
   align-items: center;
@@ -163,7 +177,7 @@ body {
   border: 1px solid var(--app-log-border);
   border-radius: 8px;
   padding: 10px 12px;
-  font-family: 'Cascadia Code', 'Consolas', monospace;
+  font-family: "Cascadia Code", "Consolas", monospace;
   font-size: 12px;
   line-height: 1.6;
   color: var(--app-text-soft);

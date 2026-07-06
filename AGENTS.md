@@ -10,16 +10,16 @@ RhythmFlow is a cross-platform (Windows/macOS) desktop application for aligning 
 
 ## Tech Stack
 
-| Layer       | Technology                        |
-|-------------|-----------------------------------|
-| Backend     | Python >= 3.11                    |
-| Desktop GUI | pywebview >= 5.0                  |
+| Layer       | Technology                                    |
+| ----------- | --------------------------------------------- |
+| Backend     | Python >= 3.11                                |
+| Desktop GUI | pywebview >= 5.0                              |
 | Frontend    | React 18 + TypeScript + Ant Design 5 + Vite 5 |
-| Audio DSP   | numpy, scipy, librosa             |
-| Audio I/O   | pydub, imageio-ffmpeg             |
-| Packaging   | PyInstaller                       |
-| CI/CD       | GitHub Actions (Windows + macOS)  |
-| Testing     | Python `unittest` (stdlib)        |
+| Audio DSP   | numpy, scipy, librosa                         |
+| Audio I/O   | pydub, imageio-ffmpeg                         |
+| Packaging   | PyInstaller                                   |
+| CI/CD       | GitHub Actions (Windows + macOS)              |
+| Testing     | Python `unittest` (stdlib)                    |
 
 ## Commands
 
@@ -31,10 +31,8 @@ py -3 -m pip install -r requirements.txt
 py -3 -m pip install pyinstaller
 
 # Frontend
-Set-Location rhythmflow\webui\frontend
-npm install
-npm run build
-Set-Location ..\..\..
+vp install
+vp build
 ```
 
 ### Run (Development)
@@ -43,7 +41,7 @@ Set-Location ..\..\..
 # Production frontend (served from frontend_dist/)
 py -3 -m rhythmflow
 
-# Dev mode with Vite HMR on port 5173
+# Dev mode with Vite+ HMR on port 5173
 $env:RHYTHMFLOW_DEV = "1"
 py -3 -m rhythmflow
 ```
@@ -51,16 +49,15 @@ py -3 -m rhythmflow
 ### Frontend Dev Only
 
 ```powershell
-Set-Location rhythmflow\webui\frontend
-npm run dev          # Vite dev server on port 5173
-npm run build        # tsc --noEmit && vite build → ../frontend_dist/
-npm run preview      # Vite preview
+vp dev          # Vite+ dev server on port 5173
+vp build        # Vite+ build → rhythmflow/webui/frontend_dist/
+vp preview      # Vite+ preview
 ```
 
 ### Build Distribution
 
 ```powershell
-Set-Location rhythmflow\webui\frontend; npm install; npm run build; Set-Location ..\..\..
+vp install; vp build
 py -3 -m PyInstaller --noconfirm rhythmflow.spec
 ```
 
@@ -70,7 +67,7 @@ py -3 -m PyInstaller --noconfirm rhythmflow.spec
 py -3 -m unittest discover -s tests
 ```
 
-> **Note**: No linter/formatter is configured. Ruff cache is gitignored; `tsc --noEmit` runs as part of `npm run build` for frontend type-checking.
+> **Note**: Frontend linting, formatting, type checks, tests, and builds are managed by Vite+. Prefer `vp check` for validation loops.
 
 ## Directory Structure
 
@@ -98,9 +95,7 @@ RhythmFlow/
 │       ├── state.py              # AppState: row management, analysis results
 │       ├── tasks.py              # Worker threads for analysis/processing
 │       ├── waveform.py           # Waveform envelope for review UI
-│       └── frontend/             # React + Vite frontend
-│           ├── package.json
-│           ├── vite.config.ts    # Output to ../frontend_dist/
+│       └── frontend/             # React + Vite+ frontend source
 │           └── src/
 │               ├── App.tsx
 │               ├── bridge.ts      # Python↔JS bridge (proxy + mock)
@@ -198,18 +193,18 @@ pywebview Desktop Window
 
 ## Key Files Reference
 
-| File | Purpose |
-|------|---------|
-| `pyproject.toml` | Package metadata, deps, entry point |
-| `requirements.txt` | Pip dependencies |
-| `rhythmflow.spec` | PyInstaller packaging |
-| `rhythmflow/config.py` | Global constants |
-| `rhythmflow/core/alignment.py` | Chroma offset detection |
-| `rhythmflow/core/segmented_alignment.py` | Smart trim detection |
-| `rhythmflow/core/pipeline.py` | Export pipeline |
-| `rhythmflow/webui/api.py` | JS-callable API bridge |
-| `rhythmflow/webui/state.py` | Application state machine |
-| `rhythmflow/webui/tasks.py` | Worker thread orchestration |
-| `rhythmflow/webui/frontend/src/types.ts` | Frontend type definitions |
-| `rhythmflow/webui/frontend/vite.config.ts` | Vite build config |
-| `.github/workflows/release.yml` | CI/CD release pipeline |
+| File                                     | Purpose                                    |
+| ---------------------------------------- | ------------------------------------------ |
+| `pyproject.toml`                         | Package metadata, deps, entry point        |
+| `requirements.txt`                       | Pip dependencies                           |
+| `rhythmflow.spec`                        | PyInstaller packaging                      |
+| `rhythmflow/config.py`                   | Global constants                           |
+| `rhythmflow/core/alignment.py`           | Chroma offset detection                    |
+| `rhythmflow/core/segmented_alignment.py` | Smart trim detection                       |
+| `rhythmflow/core/pipeline.py`            | Export pipeline                            |
+| `rhythmflow/webui/api.py`                | JS-callable API bridge                     |
+| `rhythmflow/webui/state.py`              | Application state machine                  |
+| `rhythmflow/webui/tasks.py`              | Worker thread orchestration                |
+| `rhythmflow/webui/frontend/src/types.ts` | Frontend type definitions                  |
+| `vite.config.ts`                         | Vite+ build, test, lint, and format config |
+| `.github/workflows/release.yml`          | CI/CD release pipeline                     |

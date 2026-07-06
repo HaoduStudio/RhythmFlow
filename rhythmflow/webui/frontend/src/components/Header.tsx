@@ -4,14 +4,14 @@ import {
   PlaySquareOutlined,
   ScissorOutlined,
   SunOutlined,
-} from '@ant-design/icons';
-import { Button, Menu, Select, Space, Switch, Tooltip } from 'antd';
-import { useMemo } from 'react';
-import { t } from '../i18n';
-import { useStore } from '../store';
-import { pickSubtitle } from '../subtitles';
-import { useThemeMode } from '../themeMode';
-import type { AppPage, Language } from '../types';
+} from "@ant-design/icons";
+import { Button, Menu, Select, Space, Switch, Tooltip } from "antd";
+import { useMemo } from "react";
+import { t } from "../i18n";
+import { useStore } from "../store";
+import { pickSubtitle } from "../subtitles";
+import { useThemeMode } from "../themeMode";
+import type { AppPage, Language } from "../types";
 
 export function AppHeader(): JSX.Element {
   const store = useStore();
@@ -32,36 +32,36 @@ export function AppHeader(): JSX.Element {
         selectedKeys={[store.page]}
         onClick={({ key }) => store.setPage(key as AppPage)}
         items={[
-          { key: 'smart', icon: <ScissorOutlined />, label: t(lang, 'menu_smart_edit') },
-          { key: 'osu', icon: <PlaySquareOutlined />, label: t(lang, 'menu_osu_assistant') },
+          { key: "smart", icon: <ScissorOutlined />, label: t(lang, "menu_smart_edit") },
+          { key: "osu", icon: <PlaySquareOutlined />, label: t(lang, "menu_osu_assistant") },
         ]}
       />
       <Space className="app-actions" size={12}>
-        <span className="header-label">{t(lang, 'language')}</span>
+        <span className="header-label">{t(lang, "language")}</span>
         <Select<Language>
           value={lang}
           style={{ width: 128 }}
           onChange={(value) => store.updateSettings({ language: value })}
           options={[
-            { value: 'zh', label: '中文' },
-            { value: 'en', label: 'English' },
+            { value: "zh", label: "中文" },
+            { value: "en", label: "English" },
           ]}
         />
-        <Tooltip title={t(lang, 'about_button')}>
+        <Tooltip title={t(lang, "about_button")}>
           <Button
             shape="circle"
             icon={<InfoCircleOutlined />}
             onClick={store.openAbout}
-            aria-label={t(lang, 'about_button')}
+            aria-label={t(lang, "about_button")}
           />
         </Tooltip>
-        <Tooltip title={t(lang, 'theme_toggle')}>
+        <Tooltip title={t(lang, "theme_toggle")}>
           <Switch
-            checked={mode === 'dark'}
+            checked={mode === "dark"}
             checkedChildren={<MoonOutlined />}
             unCheckedChildren={<SunOutlined />}
             onChange={toggle}
-            aria-label={t(lang, 'theme_toggle')}
+            aria-label={t(lang, "theme_toggle")}
           />
         </Tooltip>
       </Space>

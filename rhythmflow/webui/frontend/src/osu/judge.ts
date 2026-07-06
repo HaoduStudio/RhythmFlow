@@ -6,7 +6,7 @@ import type {
   ReplayData,
   SimResult,
   SimSample,
-} from './types';
+} from "./types";
 
 interface Windows {
   max: number;
@@ -40,19 +40,19 @@ function hitWindows(overallDifficulty: number): Windows {
 
 function judgeInWindow(dt: number, w: Windows): Judgement {
   const a = Math.abs(dt);
-  if (a <= w.max) return 'max';
-  if (a <= w.perfect) return 'perfect';
-  if (a <= w.great) return 'great';
-  if (a <= w.good) return 'good';
-  if (a <= w.bad) return 'bad';
-  return 'miss';
+  if (a <= w.max) return "max";
+  if (a <= w.perfect) return "perfect";
+  if (a <= w.great) return "great";
+  if (a <= w.good) return "good";
+  if (a <= w.bad) return "bad";
+  return "miss";
 }
 
 export function simulateReplay(chart: ManiaChart, replay: ReplayData): SimResult {
   const w = hitWindows(chart.overallDifficulty);
   const raw: JudgementEvent[] = [];
   const hitByColumn: Array<Array<NoteHit | null>> = chart.notesByColumn.map((notes) =>
-    new Array<NoteHit | null>(notes.length).fill(null),
+    Array.from({ length: notes.length }, (): NoteHit | null => null),
   );
 
   for (let column = 0; column < chart.keyCount; column += 1) {
@@ -70,8 +70,8 @@ export function simulateReplay(chart: ManiaChart, replay: ReplayData): SimResult
         ii += 1;
       } else {
         const time = note.startTime + w.miss;
-        raw.push({ time, column, judgement: 'miss' });
-        hitByColumn[column][ni] = { time, judgement: 'miss' };
+        raw.push({ time, column, judgement: "miss" });
+        hitByColumn[column][ni] = { time, judgement: "miss" };
       }
     }
   }
@@ -99,7 +99,7 @@ export function simulateReplay(chart: ManiaChart, replay: ReplayData): SimResult
 
   for (const event of raw) {
     counts[event.judgement] += 1;
-    if (event.judgement === 'miss') combo = 0;
+    if (event.judgement === "miss") combo = 0;
     else combo += 1;
     maxCombo = Math.max(maxCombo, combo);
     weighted += JUDGEMENT_VALUE[event.judgement];

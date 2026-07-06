@@ -46,15 +46,20 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: npm
-          cache-dependency-path: rhythmflow/webui/frontend/package-lock.json
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Set up pnpm
+        shell: bash
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.10.0 --activate
 
       - name: Build front-end
-        working-directory: rhythmflow/webui/frontend
         run: |
-          npm ci
-          npm run build
+          pnpm install --frozen-lockfile
+          pnpm exec vp build
 
       - name: Build executable
         run: python -m PyInstaller --noconfirm rhythmflow.spec

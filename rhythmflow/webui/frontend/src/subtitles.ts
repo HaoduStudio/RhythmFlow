@@ -1,6 +1,6 @@
-import type { Language } from './types';
-import enSubtitles from './subtitles.en.txt?raw';
-import zhSubtitles from './subtitles.zh.txt?raw';
+import type { Language } from "./types";
+import enSubtitles from "./subtitles.en.txt?raw";
+import zhSubtitles from "./subtitles.zh.txt?raw";
 
 function parseLines(text: string): string[] {
   return text
@@ -16,5 +16,5 @@ const SUBTITLE_LINES: Record<Language, string[]> = {
 
 export function pickSubtitle(language: Language): string {
   const lines = SUBTITLE_LINES[language] ?? SUBTITLE_LINES.zh;
-  return lines[Math.floor(Math.random() * lines.length)] ?? '';
+  return lines[Math.floor(Math.random() * lines.length)] ?? "";
 }

@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useRef } from 'react';
-import { t } from '../../i18n';
-import type { Language, ReviewSegment, WaveformData, WaveformTrack } from '../../types';
-import { adjustedSpans } from './segmentMath';
+import { useCallback, useEffect, useRef } from "react";
+import { t } from "../../i18n";
+import type { Language, ReviewSegment, WaveformData, WaveformTrack } from "../../types";
+import { adjustedSpans } from "./segmentMath";
 
 interface Rect {
   left: number;
@@ -27,7 +27,12 @@ function geometry(width: number, height: number): Geometry {
   };
   const gap = 20;
   const trackHeight = (plot.height - gap) / 2;
-  const reference: Rect = { left: plot.left, top: plot.top, width: plot.width, height: trackHeight };
+  const reference: Rect = {
+    left: plot.left,
+    top: plot.top,
+    width: plot.width,
+    height: trackHeight,
+  };
   const video: Rect = {
     left: plot.left,
     top: reference.top + trackHeight + gap,
@@ -68,32 +73,32 @@ export function WaveformCanvas({
     const height = canvas.clientHeight;
     canvas.width = Math.round(width * dpr);
     canvas.height = Math.round(height * dpr);
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, width, height);
-    ctx.fillStyle = '#0f172a';
+    ctx.fillStyle = "#0f172a";
     ctx.fillRect(0, 0, width, height);
 
     const geo = geometry(width, height);
     const [refStart, , videoStart] = adjustedSpans(segment, delta);
 
-    drawTrack(ctx, geo.reference, t(language, 'review_wave_reference'));
-    drawTrack(ctx, geo.video, t(language, 'review_wave_video'));
+    drawTrack(ctx, geo.reference, t(language, "review_wave_reference"));
+    drawTrack(ctx, geo.video, t(language, "review_wave_video"));
     drawTicks(ctx, geo.plot, height, data.duration_s);
 
-    drawEnvelope(ctx, geo.reference, data.reference, '#38bdf8', refStart, data.duration_s);
-    drawEnvelope(ctx, geo.video, data.video, '#f472b6', videoStart, data.duration_s);
+    drawEnvelope(ctx, geo.reference, data.reference, "#38bdf8", refStart, data.duration_s);
+    drawEnvelope(ctx, geo.video, data.video, "#f472b6", videoStart, data.duration_s);
 
-    ctx.fillStyle = '#f8fafc';
-    ctx.font = '12px system-ui';
-    ctx.textAlign = 'right';
+    ctx.fillStyle = "#f8fafc";
+    ctx.font = "12px system-ui";
+    ctx.textAlign = "right";
     ctx.fillText(
-      `${t(language, 'review_adjustment')}: ${delta >= 0 ? '+' : ''}${delta.toFixed(3)}s`,
+      `${t(language, "review_adjustment")}: ${delta >= 0 ? "+" : ""}${delta.toFixed(3)}s`,
       width - 20,
       18,
     );
-    ctx.textAlign = 'left';
+    ctx.textAlign = "left";
   }, [data, segment, delta, language]);
 
   useEffect(() => {
@@ -102,8 +107,8 @@ export function WaveformCanvas({
 
   useEffect(() => {
     const handleResize = () => draw();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, [draw]);
 
   const inVideoRect = (offsetX: number, offsetY: number): boolean => {
@@ -123,10 +128,11 @@ export function WaveformCanvas({
     const canvas = canvasRef.current;
     if (!canvas) return;
     dragRef.current = { startX: event.nativeEvent.offsetX, startDelta: delta };
-    canvas.classList.add('dragging');
+    canvas.classList.add("dragging");
 
     const rectLeft = canvas.getBoundingClientRect().left;
-    const secondsPerPixel = data.duration_s / geometry(canvas.clientWidth, canvas.clientHeight).plot.width;
+    const secondsPerPixel =
+      data.duration_s / geometry(canvas.clientWidth, canvas.clientHeight).plot.width;
 
     const onMove = (moveEvent: MouseEvent) => {
       if (!dragRef.current) return;
@@ -136,41 +142,41 @@ export function WaveformCanvas({
     };
     const onUp = () => {
       dragRef.current = null;
-      canvas.classList.remove('dragging');
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup', onUp);
+      canvas.classList.remove("dragging");
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
     };
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
   };
 
   return (
     <canvas
       ref={canvasRef}
       className="waveform-canvas"
-      title={t(language, 'review_waveform_tooltip')}
+      title={t(language, "review_waveform_tooltip")}
       onMouseDown={onMouseDown}
     />
   );
 }
 
 function drawTrack(ctx: CanvasRenderingContext2D, rect: Rect, label: string): void {
-  ctx.fillStyle = '#111827';
+  ctx.fillStyle = "#111827";
   ctx.fillRect(rect.left, rect.top, rect.width, rect.height);
-  ctx.strokeStyle = '#334155';
+  ctx.strokeStyle = "#334155";
   ctx.strokeRect(rect.left, rect.top, rect.width, rect.height);
   const centerY = rect.top + rect.height / 2;
-  ctx.strokeStyle = '#475569';
+  ctx.strokeStyle = "#475569";
   ctx.beginPath();
   ctx.moveTo(rect.left, centerY);
   ctx.lineTo(rect.left + rect.width, centerY);
   ctx.stroke();
-  ctx.fillStyle = '#cbd5e1';
-  ctx.font = '12px system-ui';
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'middle';
+  ctx.fillStyle = "#cbd5e1";
+  ctx.font = "12px system-ui";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
   ctx.fillText(label, 8, centerY);
-  ctx.textBaseline = 'alphabetic';
+  ctx.textBaseline = "alphabetic";
 }
 
 function drawTicks(
@@ -181,16 +187,16 @@ function drawTicks(
 ): void {
   for (const ratio of [0, 0.5, 1]) {
     const x = plot.left + plot.width * ratio;
-    ctx.strokeStyle = '#475569';
+    ctx.strokeStyle = "#475569";
     ctx.beginPath();
     ctx.moveTo(x, plot.top);
     ctx.lineTo(x, plot.top + plot.height);
     ctx.stroke();
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '11px system-ui';
-    ctx.textAlign = 'center';
+    ctx.fillStyle = "#94a3b8";
+    ctx.font = "11px system-ui";
+    ctx.textAlign = "center";
     ctx.fillText(`${(duration * ratio).toFixed(1)}s`, x, height - 8);
-    ctx.textAlign = 'left';
+    ctx.textAlign = "left";
   }
 }
 

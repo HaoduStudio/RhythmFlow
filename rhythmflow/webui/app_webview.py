@@ -26,8 +26,8 @@ def run() -> int:
     frontend_dir = _frontend_dir()
     if frontend_dir is None and not dev_mode:
         raise RuntimeError(
-            "Front-end build not found. Run `npm install && npm run build` in "
-            "rhythmflow/webui/frontend before launching."
+            "Front-end build not found. Run `vp install && vp build` in the "
+            "workspace root before launching."
         )
 
     media_server = MediaServer(frontend_dir)

@@ -32,13 +32,13 @@ hiddenimports += [
     "clr",
 ]
 
-# Bundle the built React front end. Run `npm run build` in
-# rhythmflow/webui/frontend before packaging.
+# Bundle the built React front end. Run `vp build` in the workspace root before
+# packaging.
 frontend_dist = os.path.join(SPECPATH, "rhythmflow", "webui", "frontend_dist")
 if not os.path.isfile(os.path.join(frontend_dist, "index.html")):
     raise SystemExit(
         "frontend_dist/index.html not found. Build the UI first:\n"
-        "  cd rhythmflow/webui/frontend && npm install && npm run build"
+        "  vp install && vp build"
     )
 datas += [(frontend_dist, os.path.join("rhythmflow", "webui", "frontend_dist"))]
 

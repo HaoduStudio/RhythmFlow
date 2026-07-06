@@ -19,16 +19,14 @@ RhythmFlow is a desktop tool for aligning hand-cam arcade rhythm-game videos to 
 
 ## Setup
 
-Install the Python dependencies and build the front end (Node.js 18+ required):
+Install the Python dependencies and build the front end (Node.js 22+ recommended):
 
 ```powershell
 py -3 -m pip install -r requirements.txt
 py -3 -m pip install pyinstaller
 
-cd rhythmflow/webui/frontend
-npm install
-npm run build
-cd ../../..
+npx vp install
+npx vp build
 ```
 
 Run the app:
@@ -56,7 +54,8 @@ py -3 -m rhythmflow
 Build the front end first, then package the executable:
 
 ```powershell
-cd rhythmflow/webui/frontend; npm install; npm run build; cd ../../..
+npx vp install
+npx vp build
 py -3 -m PyInstaller --noconfirm rhythmflow.spec
 ```
 
@@ -74,5 +73,7 @@ On macOS the build is packaged as an app bundle at `dist/RhythmFlow.app`.
 Run the automated checks:
 
 ```powershell
+npx vp check
+npx vp test
 py -3 -m unittest discover -s tests
 ```

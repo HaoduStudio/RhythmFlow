@@ -9,9 +9,7 @@ description = "Align hand-cam rhythm-game videos to clean reference audio."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "Apache-2.0" }
-authors = [
-  { name = "HaoduStudio" }
-]
+authors = [{ name = "HaoduStudio" }]
 dependencies = [
   "pywebview>=5.0",
   "sentry-sdk>=2.35.0",
@@ -19,13 +17,11 @@ dependencies = [
   "scipy>=1.14",
   "imageio-ffmpeg>=0.5",
   "librosa>=0.10",
-  "pydub>=0.25"
+  "pydub>=0.25",
 ]
 
 [project.optional-dependencies]
-separation = [
-  "demucs>=4.0"
-]
+separation = ["demucs>=4.0"]
 
 [project.scripts]
 rhythmflow = "rhythmflow.app:main"

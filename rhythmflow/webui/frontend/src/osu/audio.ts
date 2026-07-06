@@ -27,10 +27,7 @@ export class OsuAudioPlayer {
   }
 
   async load(data: ArrayBuffer | Uint8Array): Promise<void> {
-    const bytes =
-      data instanceof Uint8Array
-        ? data.slice().buffer
-        : data.slice(0);
+    const bytes = data instanceof Uint8Array ? data.slice().buffer : data.slice(0);
     this.buffer = await this.ctx.decodeAudioData(bytes as ArrayBuffer);
     this.startOffsetMs = 0;
   }
@@ -53,7 +50,7 @@ export class OsuAudioPlayer {
 
   play(): void {
     if (!this.buffer || this.playingState) return;
-    if (this.ctx.state === 'suspended') void this.ctx.resume();
+    if (this.ctx.state === "suspended") void this.ctx.resume();
     const source = this.ctx.createBufferSource();
     source.buffer = this.buffer;
     source.playbackRate.value = this.rate;

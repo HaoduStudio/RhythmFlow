@@ -1,18 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { OsuAudioPlayer } from '../../osu/audio';
-import { simulateReplay } from '../../osu/judge';
-import { buildChart, findFile, loadOsz, parseReplay } from '../../osu/parse';
-import type {
-  ManiaChart,
-  OszContent,
-  ReplayData,
-  RenderScene,
-  SimResult,
-} from '../../osu/types';
-import { useStore } from '../../store';
-import { OsuExportPanel } from './OsuExportPanel';
-import { OsuImportCard } from './OsuImportCard';
-import { OsuPlayer } from './OsuPlayer';
+import { useEffect, useMemo, useRef, useState } from "react";
+import { OsuAudioPlayer } from "../../osu/audio";
+import { simulateReplay } from "../../osu/judge";
+import { buildChart, findFile, loadOsz, parseReplay } from "../../osu/parse";
+import type { ManiaChart, OszContent, ReplayData, RenderScene, SimResult } from "../../osu/types";
+import { useStore } from "../../store";
+import { OsuExportPanel } from "./OsuExportPanel";
+import { OsuImportCard } from "./OsuImportCard";
+import { OsuPlayer } from "./OsuPlayer";
 
 export function OsuAssistantPage(): JSX.Element {
   const store = useStore();
@@ -31,7 +25,7 @@ export function OsuAssistantPage(): JSX.Element {
   const [loadingOsz, setLoadingOsz] = useState(false);
   const [loadingReplay, setLoadingReplay] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [audioReadyKey, setAudioReadyKey] = useState('');
+  const [audioReadyKey, setAudioReadyKey] = useState("");
 
   useEffect(() => {
     const player = new OsuAudioPlayer();
@@ -54,13 +48,13 @@ export function OsuAssistantPage(): JSX.Element {
       if (loaded.difficulties.length === 0) {
         setContent(null);
         setChart(null);
-        setError('osu_no_mania');
+        setError("osu_no_mania");
         return;
       }
       setContent(loaded);
       setSelectedDifficulty(loaded.difficulties[0].filename);
     } catch {
-      setError('osu_parse_failed');
+      setError("osu_parse_failed");
     } finally {
       setLoadingOsz(false);
     }
@@ -72,7 +66,7 @@ export function OsuAssistantPage(): JSX.Element {
     if (!diff) return;
     let cancelled = false;
 
-    (async () => {
+    void (async () => {
       try {
         const built = buildChart(diff.osuText);
         if (cancelled) return;
@@ -105,7 +99,7 @@ export function OsuAssistantPage(): JSX.Element {
           return bitmap;
         });
       } catch {
-        if (!cancelled) setError('osu_parse_failed');
+        if (!cancelled) setError("osu_parse_failed");
       }
     })();
 
@@ -118,7 +112,7 @@ export function OsuAssistantPage(): JSX.Element {
     if (!chart || !replayFile) return;
     let cancelled = false;
     setLoadingReplay(true);
-    (async () => {
+    void (async () => {
       try {
         const parsed = await parseReplay(replayFile, chart.keyCount);
         if (cancelled) return;
@@ -126,7 +120,7 @@ export function OsuAssistantPage(): JSX.Element {
         setSim(simulateReplay(chart, parsed));
         audioRef.current?.setRate(parsed.rate);
       } catch {
-        if (!cancelled) setError('osu_parse_failed');
+        if (!cancelled) setError("osu_parse_failed");
       } finally {
         if (!cancelled) setLoadingReplay(false);
       }

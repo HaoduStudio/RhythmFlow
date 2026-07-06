@@ -1,4 +1,4 @@
-import type { ReviewSegment } from '../../types';
+import type { ReviewSegment } from "../../types";
 
 // Mirrors rhythmflow/webui/waveform.py::adjusted_spans and state._adjusted_spans.
 export function segmentDuration(segment: ReviewSegment): number {

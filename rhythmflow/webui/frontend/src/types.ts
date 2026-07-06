@@ -1,10 +1,10 @@
-export type Language = 'zh' | 'en';
+export type Language = "zh" | "en";
 
-export type AppPage = 'smart' | 'osu';
+export type AppPage = "smart" | "osu";
 
-export type CutMode = 'accurate' | 'fast';
+export type CutMode = "accurate" | "fast";
 
-export type ReferenceGame = 'maimai' | 'chunithm';
+export type ReferenceGame = "maimai" | "chunithm";
 
 export interface Settings {
   language: Language;
@@ -79,12 +79,12 @@ export interface AboutInfo {
 }
 
 export type UpdateStatusName =
-  | 'checking'
-  | 'downloading'
-  | 'installing'
-  | 'restart_pending'
-  | 'up_to_date'
-  | 'error';
+  | "checking"
+  | "downloading"
+  | "installing"
+  | "restart_pending"
+  | "up_to_date"
+  | "error";
 
 export interface UpdateStatusPayload {
   status: UpdateStatusName;

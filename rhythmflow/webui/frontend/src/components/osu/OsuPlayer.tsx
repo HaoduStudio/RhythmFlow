@@ -1,11 +1,11 @@
-import { PauseCircleOutlined, PlayCircleOutlined, ReloadOutlined } from '@ant-design/icons';
-import { Button, Card, Slider, Space } from 'antd';
-import { useEffect, useRef, useState, type MutableRefObject } from 'react';
-import { t } from '../../i18n';
-import type { OsuAudioPlayer } from '../../osu/audio';
-import { drawScene } from '../../osu/render';
-import type { RenderScene } from '../../osu/types';
-import type { Language } from '../../types';
+import { PauseCircleOutlined, PlayCircleOutlined, ReloadOutlined } from "@ant-design/icons";
+import { Button, Card, Slider, Space } from "antd";
+import { useEffect, useRef, useState, type MutableRefObject } from "react";
+import { t } from "../../i18n";
+import type { OsuAudioPlayer } from "../../osu/audio";
+import { drawScene } from "../../osu/render";
+import type { RenderScene } from "../../osu/types";
+import type { Language } from "../../types";
 
 interface Props {
   language: Language;
@@ -21,7 +21,7 @@ function formatMs(ms: number): string {
   const total = Math.max(0, Math.floor(ms / 1000));
   const m = Math.floor(total / 60);
   const s = total % 60;
-  return `${m}:${s.toString().padStart(2, '0')}`;
+  return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
 export function OsuPlayer(props: Props): JSX.Element {
@@ -51,11 +51,14 @@ export function OsuPlayer(props: Props): JSX.Element {
         const dpr = window.devicePixelRatio || 1;
         const width = canvas.clientWidth;
         const height = canvas.clientHeight;
-        if (canvas.width !== Math.round(width * dpr) || canvas.height !== Math.round(height * dpr)) {
+        if (
+          canvas.width !== Math.round(width * dpr) ||
+          canvas.height !== Math.round(height * dpr)
+        ) {
           canvas.width = Math.round(width * dpr);
           canvas.height = Math.round(height * dpr);
         }
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext("2d");
         if (ctx) {
           ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
           if (currentScene) {
@@ -75,7 +78,7 @@ export function OsuPlayer(props: Props): JSX.Element {
             }
           } else {
             ctx.clearRect(0, 0, width, height);
-            ctx.fillStyle = '#05070d';
+            ctx.fillStyle = "#05070d";
             ctx.fillRect(0, 0, width, height);
           }
         }
@@ -110,10 +113,10 @@ export function OsuPlayer(props: Props): JSX.Element {
   };
 
   return (
-    <Card title={t(lang, 'osu_player_title')} size="small">
+    <Card title={t(lang, "osu_player_title")} size="small">
       <div className="osu-stage">
         <canvas ref={canvasRef} className="osu-canvas" />
-        {!scene && <div className="osu-stage-hint">{t(lang, 'osu_no_chart_hint')}</div>}
+        {!scene && <div className="osu-stage-hint">{t(lang, "osu_no_chart_hint")}</div>}
       </div>
 
       <div className="osu-transport">
@@ -124,10 +127,10 @@ export function OsuPlayer(props: Props): JSX.Element {
             onClick={togglePlay}
             disabled={!scene}
           >
-            {playing ? t(lang, 'osu_pause') : t(lang, 'osu_play')}
+            {playing ? t(lang, "osu_pause") : t(lang, "osu_play")}
           </Button>
           <Button icon={<ReloadOutlined />} onClick={restart} disabled={!scene}>
-            {t(lang, 'osu_restart')}
+            {t(lang, "osu_restart")}
           </Button>
         </Space>
         <Slider
@@ -145,7 +148,7 @@ export function OsuPlayer(props: Props): JSX.Element {
       </div>
 
       <div className="osu-speed-row">
-        <span className="header-label">{t(lang, 'osu_scroll_speed')}</span>
+        <span className="header-label">{t(lang, "osu_scroll_speed")}</span>
         <Slider
           className="osu-seek"
           min={5}

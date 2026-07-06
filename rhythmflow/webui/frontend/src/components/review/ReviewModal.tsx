@@ -5,24 +5,36 @@ import {
   SoundOutlined,
   StopOutlined,
   VideoCameraOutlined,
-} from '@ant-design/icons';
-import { App, Button, Checkbox, InputNumber, Modal, Slider, Space, Spin, Table, Tooltip, Typography } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { t } from '../../i18n';
-import { useStore } from '../../store';
-import type { ReviewSegment, WaveformData } from '../../types';
-import { adjustedSpans, formatSeconds, formatSpan } from './segmentMath';
-import { WaveformCanvas } from './WaveformCanvas';
+} from "@ant-design/icons";
+import {
+  App,
+  Button,
+  Checkbox,
+  InputNumber,
+  Modal,
+  Slider,
+  Space,
+  Spin,
+  Table,
+  Tooltip,
+  Typography,
+} from "antd";
+import type { ColumnsType } from "antd/es/table";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { t } from "../../i18n";
+import { useStore } from "../../store";
+import type { ReviewSegment, WaveformData } from "../../types";
+import { adjustedSpans, formatSeconds, formatSpan } from "./segmentMath";
+import { WaveformCanvas } from "./WaveformCanvas";
 
-type Source = 'reference' | 'video';
+type Source = "reference" | "video";
 
 export function ReviewModal(): JSX.Element {
   const store = useStore();
 
   return (
     <Modal
-      title={t(store.language, 'review_dialog_title')}
+      title={t(store.language, "review_dialog_title")}
       open={store.reviewOpen}
       width={1080}
       destroyOnHidden
@@ -39,7 +51,7 @@ function ReviewBody({ segments }: { segments: ReviewSegment[] }): JSX.Element {
   const lang = store.language;
   const { message } = App.useApp();
 
-  const [selectedId, setSelectedId] = useState(segments[0]?.id ?? '');
+  const [selectedId, setSelectedId] = useState(segments[0]?.id ?? "");
   const [deltas, setDeltas] = useState<Record<string, number>>({});
   const [checked, setChecked] = useState<Record<string, boolean>>({});
   const [waveform, setWaveform] = useState<WaveformData | null>(null);
@@ -82,10 +94,10 @@ function ReviewBody({ segments }: { segments: ReviewSegment[] }): JSX.Element {
       .then((data) => {
         if (token !== loadTokenRef.current) return;
         if (data.ok) setWaveform(data);
-        else setWaveformError(t(lang, 'review_waveform_error'));
+        else setWaveformError(t(lang, "review_waveform_error"));
       })
       .catch(() => {
-        if (token === loadTokenRef.current) setWaveformError(t(lang, 'review_waveform_error'));
+        if (token === loadTokenRef.current) setWaveformError(t(lang, "review_waveform_error"));
       })
       .finally(() => {
         if (token === loadTokenRef.current) setWaveformLoading(false);
@@ -100,11 +112,11 @@ function ReviewBody({ segments }: { segments: ReviewSegment[] }): JSX.Element {
 
   const play = (source: Source) => {
     if (!selected) {
-      message.info(t(lang, 'review_select_segment'));
+      message.info(t(lang, "review_select_segment"));
       return;
     }
     const [rs, re, vs, ve] = adjustedSpans(selected, deltaFor(selected.id));
-    const isRef = source === 'reference';
+    const isRef = source === "reference";
     const url = isRef ? selected.reference_url : selected.video_url;
     if (!url) return;
     const start = isRef ? rs : vs;
@@ -115,8 +127,8 @@ function ReviewBody({ segments }: { segments: ReviewSegment[] }): JSX.Element {
     setPositionSec(0);
     const video = videoRef.current;
     if (!video) return;
-    if (video.getAttribute('data-src') !== url) {
-      video.setAttribute('data-src', url);
+    if (video.getAttribute("data-src") !== url) {
+      video.setAttribute("data-src", url);
       pendingSeekRef.current = start;
       video.src = url;
       video.load();
@@ -170,7 +182,7 @@ function ReviewBody({ segments }: { segments: ReviewSegment[] }): JSX.Element {
 
   const accept = () => {
     if (!allChecked) {
-      message.warning(t(lang, 'review_incomplete'));
+      message.warning(t(lang, "review_incomplete"));
       return;
     }
     const payload = segments.map((s) => ({
@@ -184,17 +196,17 @@ function ReviewBody({ segments }: { segments: ReviewSegment[] }): JSX.Element {
   const durationSec = rangeRef.current ? rangeRef.current.end - rangeRef.current.start : 0;
 
   const columns: ColumnsType<ReviewSegment> = [
-    { title: t(lang, 'review_table_file'), dataIndex: 'file_name', ellipsis: true, width: 120 },
+    { title: t(lang, "review_table_file"), dataIndex: "file_name", ellipsis: true, width: 120 },
     {
-      title: t(lang, 'review_table_segment'),
+      title: t(lang, "review_table_segment"),
       width: 96,
       render: (_v, seg) => {
-        const notes = seg.notes.map((n) => t(lang, n.key, n.params)).join('\n');
+        const notes = seg.notes.map((n) => t(lang, n.key, n.params)).join("\n");
         return <Tooltip title={notes}>{t(lang, seg.label_key, seg.label_params)}</Tooltip>;
       },
     },
     {
-      title: t(lang, 'review_table_reference'),
+      title: t(lang, "review_table_reference"),
       width: 130,
       render: (_v, seg) => {
         const [rs, re] = adjustedSpans(seg, deltaFor(seg.id));
@@ -202,7 +214,7 @@ function ReviewBody({ segments }: { segments: ReviewSegment[] }): JSX.Element {
       },
     },
     {
-      title: t(lang, 'review_table_video'),
+      title: t(lang, "review_table_video"),
       width: 130,
       render: (_v, seg) => {
         const [, , vs, ve] = adjustedSpans(seg, deltaFor(seg.id));
@@ -210,9 +222,9 @@ function ReviewBody({ segments }: { segments: ReviewSegment[] }): JSX.Element {
       },
     },
     {
-      title: t(lang, 'review_table_confirm'),
+      title: t(lang, "review_table_confirm"),
       width: 76,
-      align: 'center',
+      align: "center",
       render: (_v, seg) => (
         <Checkbox
           checked={!!checked[seg.id]}
@@ -225,7 +237,7 @@ function ReviewBody({ segments }: { segments: ReviewSegment[] }): JSX.Element {
   return (
     <>
       <Typography.Paragraph>
-        {t(lang, 'review_dialog_summary', { count: segments.length })}
+        {t(lang, "review_dialog_summary", { count: segments.length })}
       </Typography.Paragraph>
       <div className="review-body">
         <Table<ReviewSegment>
@@ -235,7 +247,7 @@ function ReviewBody({ segments }: { segments: ReviewSegment[] }): JSX.Element {
           columns={columns}
           pagination={false}
           scroll={{ y: 360 }}
-          rowClassName={(seg) => (seg.id === selectedId ? 'ant-table-row-selected' : '')}
+          rowClassName={(seg) => (seg.id === selectedId ? "ant-table-row-selected" : "")}
           onRow={(seg) => ({ onClick: () => setSelectedId(seg.id) })}
         />
 
@@ -246,20 +258,24 @@ function ReviewBody({ segments }: { segments: ReviewSegment[] }): JSX.Element {
             controls={false}
             onLoadedMetadata={onLoadedMetadata}
             onTimeUpdate={onTimeUpdate}
-            onError={() => activeSource && message.error(t(lang, 'review_preview_error'))}
+            onError={() => activeSource && message.error(t(lang, "review_preview_error"))}
           />
           <div className="preview-controls">
-            <Button icon={<SoundOutlined />} disabled={!selected} onClick={() => play('reference')}>
-              {t(lang, 'review_play_reference')}
+            <Button icon={<SoundOutlined />} disabled={!selected} onClick={() => play("reference")}>
+              {t(lang, "review_play_reference")}
             </Button>
-            <Button icon={<VideoCameraOutlined />} disabled={!selected} onClick={() => play('video')}>
-              {t(lang, 'review_play_video')}
+            <Button
+              icon={<VideoCameraOutlined />}
+              disabled={!selected}
+              onClick={() => play("video")}
+            >
+              {t(lang, "review_play_video")}
             </Button>
             <Button icon={<PauseOutlined />} disabled={!activeSource} onClick={togglePause}>
-              {playing ? t(lang, 'review_pause') : t(lang, 'review_resume')}
+              {playing ? t(lang, "review_pause") : t(lang, "review_resume")}
             </Button>
             <Button icon={<StopOutlined />} disabled={!activeSource} onClick={stopPreview}>
-              {t(lang, 'review_stop')}
+              {t(lang, "review_stop")}
             </Button>
           </div>
           <div className="timeline-row">
@@ -279,12 +295,12 @@ function ReviewBody({ segments }: { segments: ReviewSegment[] }): JSX.Element {
 
           <div style={{ marginTop: 12 }}>
             {waveformLoading && (
-              <div style={{ height: 200, display: 'grid', placeItems: 'center' }}>
-                <Spin tip={t(lang, 'review_waveform_loading')} />
+              <div style={{ height: 200, display: "grid", placeItems: "center" }}>
+                <Spin tip={t(lang, "review_waveform_loading")} />
               </div>
             )}
             {!waveformLoading && waveformError && (
-              <div style={{ height: 200, display: 'grid', placeItems: 'center', color: '#fca5a5' }}>
+              <div style={{ height: 200, display: "grid", placeItems: "center", color: "#fca5a5" }}>
                 {waveformError}
               </div>
             )}
@@ -301,7 +317,7 @@ function ReviewBody({ segments }: { segments: ReviewSegment[] }): JSX.Element {
           </div>
 
           <div className="adjust-row">
-            <span style={{ color: '#94a3b8' }}>{t(lang, 'review_adjustment')}</span>
+            <span style={{ color: "#94a3b8" }}>{t(lang, "review_adjustment")}</span>
             <InputNumber
               value={selected ? deltaFor(selected.id) : 0}
               min={bounds.lower}
@@ -310,30 +326,37 @@ function ReviewBody({ segments }: { segments: ReviewSegment[] }): JSX.Element {
               precision={3}
               suffix="s"
               disabled={!selected}
-              onChange={(value) => selected && setDelta(selected.id, typeof value === 'number' ? value : 0)}
+              onChange={(value) =>
+                selected && setDelta(selected.id, typeof value === "number" ? value : 0)
+              }
             />
             <Button
               icon={<ReloadOutlined />}
               disabled={!selected}
               onClick={() => selected && setDelta(selected.id, 0)}
             >
-              {t(lang, 'review_reset_adjustment')}
+              {t(lang, "review_reset_adjustment")}
             </Button>
             <div style={{ flex: 1 }} />
             <Button
               onClick={() => setChecked(Object.fromEntries(segments.map((s) => [s.id, true])))}
             >
-              {t(lang, 'review_confirm_all')}
+              {t(lang, "review_confirm_all")}
             </Button>
           </div>
         </div>
       </div>
 
-      <div style={{ marginTop: 16, textAlign: 'right' }}>
+      <div style={{ marginTop: 16, textAlign: "right" }}>
         <Space>
-          <Button onClick={store.closeReview}>{t(lang, 'review_cancel')}</Button>
-          <Button type="primary" icon={<PlayCircleOutlined />} disabled={!allChecked} onClick={accept}>
-            {t(lang, 'review_accept')}
+          <Button onClick={store.closeReview}>{t(lang, "review_cancel")}</Button>
+          <Button
+            type="primary"
+            icon={<PlayCircleOutlined />}
+            disabled={!allChecked}
+            onClick={accept}
+          >
+            {t(lang, "review_accept")}
           </Button>
         </Space>
       </div>

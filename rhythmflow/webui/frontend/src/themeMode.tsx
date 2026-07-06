@@ -7,17 +7,17 @@ import {
   useMemo,
   useState,
   type ReactNode,
-} from 'react';
+} from "react";
 
-export type ThemeMode = 'dark' | 'light';
+export type ThemeMode = "dark" | "light";
 
-export const THEME_KEY = 'rhythmflow-theme';
+export const THEME_KEY = "rhythmflow-theme";
 
 export function readInitialMode(): ThemeMode {
   try {
-    return localStorage.getItem(THEME_KEY) === 'light' ? 'light' : 'dark';
+    return localStorage.getItem(THEME_KEY) === "light" ? "light" : "dark";
   } catch {
-    return 'dark';
+    return "dark";
   }
 }
 
@@ -27,7 +27,7 @@ interface ThemeModeContextValue {
 }
 
 export const ThemeModeContext = createContext<ThemeModeContextValue>({
-  mode: 'dark',
+  mode: "dark",
   toggle: () => {},
 });
 
@@ -52,7 +52,7 @@ export function ThemeModeProvider({ children }: { children: ReactNode }): JSX.El
   }, [mode]);
 
   const toggle = useCallback(() => {
-    setMode((current) => (current === 'dark' ? 'light' : 'dark'));
+    setMode((current) => (current === "dark" ? "light" : "dark"));
   }, []);
 
   const value = useMemo(() => ({ mode, toggle }), [mode, toggle]);
