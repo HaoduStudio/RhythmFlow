@@ -275,7 +275,12 @@ export function ReferenceAudioPickerModal({ open, onClose }: Props): JSX.Element
                 columns={columns}
                 dataSource={game === activeGame ? filteredSongs : []}
                 loading={loadingGame === game}
-                pagination={{ pageSize: 8, size: 'small' }}
+                pagination={{
+                  defaultPageSize: 8,
+                  size: 'small',
+                  showSizeChanger: true,
+                  pageSizeOptions: [8, 10, 20, 50, 100],
+                }}
                 scroll={{ x: 760, y: 320 }}
                 locale={{
                   emptyText:
